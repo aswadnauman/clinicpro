@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-result {
+            background-color: #f5f5f5;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 3px;
+            white-space: pre-wrap;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>API Test Page</h1>
+    
+    <div class="test-section">
+        <h2>Account Groups API</h2>
+        <button onclick="testAccountGroups()">Test Account Groups</button>
+        <div id="account-groups-result" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Accounts API</h2>
+        <button onclick="testAccounts()">Test Accounts</button>
+        <div id="accounts-result" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Categories API</h2>
+        <button onclick="testCategories()">Test Categories</button>
+        <div id="categories-result" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Items API</h2>
+        <button onclick="testItems()">Test Items</button>
+        <div id="items-result" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Parties API</h2>
+        <button onclick="testParties()">Test Parties</button>
+        <div id="parties-result" class="test-result"></div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8080/New%20folder/ns/api';
+        
+        function testAccountGroups() {
+            fetch(`${API_BASE}/account_groups.php`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('account-groups-result').innerHTML = JSON.stringify(data, null, 2);
+                    document.getElementById('account-groups-result').className = 'test-result success';
+                })
+                .catch(error => {
+                    document.getElementById('account-groups-result').innerHTML = 'Error: ' + error.message;
+                    document.getElementById('account-groups-result').className = 'test-result error';
+                });
+        }
+        
+        function testAccounts() {
+            fetch(`${API_BASE}/accounts.php`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('accounts-result').innerHTML = JSON.stringify(data, null, 2);
+                    document.getElementById('accounts-result').className = 'test-result success';
+                })
+                .catch(error => {
+                    document.getElementById('accounts-result').innerHTML = 'Error: ' + error.message;
+                    document.getElementById('accounts-result').className = 'test-result error';
+                });
+        }
+        
+        function testCategories() {
+            fetch(`${API_BASE}/categories.php`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('categories-result').innerHTML = JSON.stringify(data, null, 2);
+                    document.getElementById('categories-result').className = 'test-result success';
+                })
+                .catch(error => {
+                    document.getElementById('categories-result').innerHTML = 'Error: ' + error.message;
+                    document.getElementById('categories-result').className = 'test-result error';
+                });
+        }
+        
+        function testItems() {
+            fetch(`${API_BASE}/items.php`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('items-result').innerHTML = JSON.stringify(data, null, 2);
+                    document.getElementById('items-result').className = 'test-result success';
+                })
+                .catch(error => {
+                    document.getElementById('items-result').innerHTML = 'Error: ' + error.message;
+                    document.getElementById('items-result').className = 'test-result error';
+                });
+        }
+        
+        function testParties() {
+            fetch(`${API_BASE}/parties.php`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('parties-result').innerHTML = JSON.stringify(data, null, 2);
+                    document.getElementById('parties-result').className = 'test-result success';
+                })
+                .catch(error => {
+                    document.getElementById('parties-result').innerHTML = 'Error: ' + error.message;
+                    document.getElementById('parties-result').className = 'test-result error';
+                });
+        }
+    </script>
+</body>
+</html>

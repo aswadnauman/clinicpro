@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voucher Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            display: none;
+        }
+        .btn {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .edit-btn {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .module-header h2 {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Voucher Test Page</h1>
+    <p>This page tests all voucher types to ensure they are working correctly.</p>
+    
+    <!-- Sales Voucher Test -->
+    <div class="test-section">
+        <div class="module-header">
+            <h2>Sales Voucher Test</h2>
+        </div>
+        
+        <button id="test-sales" class="btn btn-success">Create Test Sales Voucher</button>
+        <div id="sales-result" class="test-result"></div>
+    </div>
+    
+    <!-- Purchase Voucher Test -->
+    <div class="test-section">
+        <div class="module-header">
+            <h2>Purchase Voucher Test</h2>
+        </div>
+        
+        <button id="test-purchase" class="btn btn-success">Create Test Purchase Voucher</button>
+        <div id="purchase-result" class="test-result"></div>
+    </div>
+    
+    <!-- Payment Voucher Test -->
+    <div class="test-section">
+        <div class="module-header">
+            <h2>Payment Voucher Test</h2>
+        </div>
+        
+        <button id="test-payment" class="btn btn-success">Create Test Payment Voucher</button>
+        <div id="payment-result" class="test-result"></div>
+    </div>
+    
+    <!-- Receipt Voucher Test -->
+    <div class="test-section">
+        <div class="module-header">
+            <h2>Receipt Voucher Test</h2>
+        </div>
+        
+        <button id="test-receipt" class="btn btn-success">Create Test Receipt Voucher</button>
+        <div id="receipt-result" class="test-result"></div>
+    </div>
+    
+    <!-- Journal Voucher Test -->
+    <div class="test-section">
+        <div class="module-header">
+            <h2>Journal Voucher Test</h2>
+        </div>
+        
+        <button id="test-journal" class="btn btn-success">Create Test Journal Voucher</button>
+        <div id="journal-result" class="test-result"></div>
+    </div>
+    
+    <script>
+        // API Base URL
+        const API_BASE = 'http://localhost:8080/New%20folder/ns/api';
+        
+        // Test Sales Voucher
+        document.getElementById('test-sales').addEventListener('click', function() {
+            const salesData = {
+                voucher_no: 'S-' + Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                type: 'Sales',
+                description: 'Test Sales Voucher',
+                amount: 1000,
+                tax_amount: 170,
+                total_amount: 1170,
+                party_id: 1,
+                details: [
+                    {
+                        account_id: 1,
+                        item_id: 1,
+                        quantity: 10,
+                        rate: 100,
+                        amount: 1000,
+                        tax_rate: 17,
+                        tax_amount: 170,
+                        total_amount: 1170,
+                        type: 'Credit'
+                    },
+                    {
+                        account_id: 2,
+                        amount: 1170,
+                        tax_amount: 0,
+                        total_amount: 1170,
+                        type: 'Debit'
+                    }
+                ]
+            };
+            
+            sendTransaction(salesData, 'sales-result');
+        });
+        
+        // Test Purchase Voucher
+        document.getElementById('test-purchase').addEventListener('click', function() {
+            const purchaseData = {
+                voucher_no: 'P-' + Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                type: 'Purchase',
+                description: 'Test Purchase Voucher',
+                amount: 500,
+                tax_amount: 85,
+                total_amount: 585,
+                party_id: 2,
+                details: [
+                    {
+                        account_id: 3,
+                        item_id: 1,
+                        quantity: 5,
+                        rate: 100,
+                        amount: 500,
+                        tax_rate: 17,
+                        tax_amount: 85,
+                        total_amount: 585,
+                        type: 'Debit'
+                    },
+                    {
+                        account_id: 4,
+                        amount: 585,
+                        tax_amount: 0,
+                        total_amount: 585,
+                        type: 'Credit'
+                    }
+                ]
+            };
+            
+            sendTransaction(purchaseData, 'purchase-result');
+        });
+        
+        // Test Payment Voucher
+        document.getElementById('test-payment').addEventListener('click', function() {
+            const paymentData = {
+                voucher_no: 'PV-' + Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                type: 'Payment',
+                description: 'Test Payment Voucher',
+                amount: 200,
+                tax_amount: 0,
+                total_amount: 200,
+                party_id: 2,
+                details: [
+                    {
+                        account_id: 5,
+                        amount: 200,
+                        tax_rate: 0,
+                        tax_amount: 0,
+                        total_amount: 200,
+                        type: 'Credit'
+                    },
+                    {
+                        account_id: 1,
+                        amount: 200,
+                        tax_amount: 0,
+                        total_amount: 200,
+                        type: 'Debit'
+                    }
+                ]
+            };
+            
+            sendTransaction(paymentData, 'payment-result');
+        });
+        
+        // Test Receipt Voucher
+        document.getElementById('test-receipt').addEventListener('click', function() {
+            const receiptData = {
+                voucher_no: 'RV-' + Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                type: 'Receipt',
+                description: 'Test Receipt Voucher',
+                amount: 300,
+                tax_amount: 0,
+                total_amount: 300,
+                party_id: 1,
+                details: [
+                    {
+                        account_id: 1,
+                        amount: 300,
+                        tax_rate: 0,
+                        tax_amount: 0,
+                        total_amount: 300,
+                        type: 'Debit'
+                    },
+                    {
+                        account_id: 5,
+                        amount: 300,
+                        tax_amount: 0,
+                        total_amount: 300,
+                        type: 'Credit'
+                    }
+                ]
+            };
+            
+            sendTransaction(receiptData, 'receipt-result');
+        });
+        
+        // Test Journal Voucher
+        document.getElementById('test-journal').addEventListener('click', function() {
+            const journalData = {
+                voucher_no: 'JV-' + Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                type: 'Journal',
+                description: 'Test Journal Voucher',
+                amount: 100,
+                tax_amount: 0,
+                total_amount: 100,
+                details: [
+                    {
+                        account_id: 6,
+                        amount: 100,
+                        tax_rate: 0,
+                        tax_amount: 0,
+                        total_amount: 100,
+                        type: 'Debit'
+                    },
+                    {
+                        account_id: 7,
+                        amount: 100,
+                        tax_amount: 0,
+                        total_amount: 100,
+                        type: 'Credit'
+                    }
+                ]
+            };
+            
+            sendTransaction(journalData, 'journal-result');
+        });
+        
+        // Send transaction to API
+        function sendTransaction(transactionData, resultElementId) {
+            fetch(`${API_BASE}/transactions.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(transactionData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Failed to create transaction');
+                    });
+                }
+            })
+            .then(data => {
+                showResult(resultElementId, `Transaction created successfully with ID: ${data.id}`, 'success');
+            })
+            .catch(error => {
+                showResult(resultElementId, `Error creating transaction: ${error.message}`, 'error');
+            });
+        }
+        
+        // Show result
+        function showResult(elementId, message, type) {
+            const resultElement = document.getElementById(elementId);
+            resultElement.textContent = message;
+            resultElement.className = `test-result ${type}`;
+            resultElement.style.display = 'block';
+            
+            // Auto-hide success messages after 3 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    resultElement.style.display = 'none';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Items/Inventory Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .form-container { max-width: 900px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 5px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn:hover { opacity: 0.9; }
+        .search-container { margin-bottom: 20px; display: flex; gap: 10px; }
+        .search-container input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; }
+        tr:hover { background-color: #f1f1f1; }
+        .actions { display: flex; gap: 5px; }
+        .action-btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
+        .edit-btn { background: #ffc107; color: black; }
+        .delete-btn { background: #dc3545; color: white; }
+        .error-message { color: #dc3545; font-size: 12px; margin-top: 4px; }
+        .pagination { margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .pagination button { padding: 8px 12px; border: 1px solid #ddd; background: white; cursor: pointer; }
+        .pagination button.active { background: #007bff; color: white; }
+        .pagination button:disabled { cursor: not-allowed; opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-boxes"></i> Items/Inventory Management</h1>
+        
+        <div class="form-container">
+            <h2 id="form-title">Add New Item</h2>
+            <form id="item-form">
+                <input type="hidden" id="item-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="item-code">Item Code</label>
+                        <input type="text" id="item-code" required>
+                        <div class="error-message" id="error-code"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="item-name">Item Name</label>
+                        <input type="text" id="item-name" required>
+                        <div class="error-message" id="error-name"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="item-category">Category</label>
+                        <select id="item-category" required></select>
+                        <div class="error-message" id="error-category_id"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="item-unit">Unit</label>
+                        <input type="text" id="item-unit" required>
+                        <div class="error-message" id="error-unit"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="item-price">Price</label>
+                        <input type="number" id="item-price" step="0.01" value="0.00" required>
+                        <div class="error-message" id="error-price"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="item-stock-quantity">Opening Stock</label>
+                        <input type="number" id="item-stock-quantity" step="0.01" value="0.00" required>
+                        <div class="error-message" id="error-stock_quantity"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="item-sales-tax-rate">Sales Tax Rate (%)</label>
+                        <input type="number" id="item-sales-tax-rate" step="0.01" value="0.00" required>
+                        <div class="error-message" id="error-sales_tax_rate"></div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" id="save-btn" class="btn btn-primary"><i class="fas fa-save"></i> Save Item</button>
+                    <button type="button" id="cancel-btn" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="form-container">
+            <h2>Item List</h2>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search by code, name, or category...">
+                <button id="search-btn" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
+            </div>
+            <table id="items-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Unit</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div id="pagination-container" class="pagination"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '../api';
+        let currentPage = 1;
+        let currentSearch = '';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const itemId = urlParams.get('id');
+            if (itemId) {
+                editItem(itemId);
+            }
+
+            loadCategories();
+            loadItems();
+
+            document.getElementById('item-form').addEventListener('submit', saveItem);
+            document.getElementById('cancel-btn').addEventListener('click', resetForm);
+            document.getElementById('search-btn').addEventListener('click', () => {
+                currentSearch = document.getElementById('search-input').value;
+                currentPage = 1;
+                loadItems();
+            });
+        });
+
+        function loadCategories() {
+            fetch(`${API_BASE}/categories.php`)
+                .then(response => response.json())
+                .then(response => {
+                    if (response.success) {
+                        const categorySelect = document.getElementById('item-category');
+                        categorySelect.innerHTML = '<option value="">Select Category</option>';
+                        response.data.forEach(category => {
+                            categorySelect.innerHTML += `<option value="${category.id}">${category.name}</option>`;
+                        });
+                    } else {
+                        showNotification(response.message, 'error');
+                    }
+                }).catch(err => showNotification('Error loading categories', 'error'));
+        }
+
+        function loadItems() {
+            const url = new URL(`${API_BASE}/items.php`);
+            url.searchParams.append('page', currentPage);
+            url.searchParams.append('limit', 10);
+            if (currentSearch) {
+                url.searchParams.append('search', currentSearch);
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(response => {
+                    const tbody = document.querySelector('#items-table tbody');
+                    tbody.innerHTML = '';
+                    if(response.data) {
+                        response.data.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${item.code}</td>
+                                <td>${item.name}</td>
+                                <td>${item.category_name}</td>
+                                <td>${item.unit}</td>
+                                <td>₨${parseFloat(item.price).toFixed(2)}</td>
+                                <td>${parseFloat(item.stock_quantity).toFixed(2)}</td>
+                                <td class="actions">
+                                    <button class="action-btn edit-btn" data-id="${item.id}"><i class="fas fa-edit"></i></button>
+                                    <button class="action-btn delete-btn" data-id="${item.id}"><i class="fas fa-trash"></i></button>
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    }
+
+                    document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => editItem(btn.dataset.id)));
+                    document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => deleteItem(btn.dataset.id)));
+                    
+                    setupPagination(response.pagination);
+                })
+                .catch(error => showNotification('Error loading items: ' + error.message, 'error'));
+        }
+
+        function setupPagination(pagination) {
+            if (!pagination || pagination.totalPages <= 1) {
+                document.getElementById('pagination-container').innerHTML = '';
+                return;
+            }
+
+            let buttons = '';
+            for (let i = 1; i <= pagination.totalPages; i++) {
+                buttons += `<button class="${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+            document.getElementById('pagination-container').innerHTML = buttons;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            loadItems();
+        }
+
+        function saveItem(e) {
+            e.preventDefault();
+            clearErrors();
+
+            const itemId = document.getElementById('item-id').value;
+            const itemData = {
+                code: document.getElementById('item-code').value,
+                name: document.getElementById('item-name').value,
+                category_id: parseInt(document.getElementById('item-category').value),
+                unit: document.getElementById('item-unit').value,
+                price: parseFloat(document.getElementById('item-price').value),
+                stock_quantity: parseFloat(document.getElementById('item-stock-quantity').value),
+                sales_tax_rate: parseFloat(document.getElementById('item-sales-tax-rate').value)
+            };
+
+            const method = itemId ? 'PUT' : 'POST';
+            const url = itemId ? `${API_BASE}/items.php?id=${itemId}` : `${API_BASE}/items.php`;
+
+            fetch(url, { 
+                method: method, 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(itemData) 
+            })
+            .then(handleApiResponse)
+            .then(response => {
+                showNotification(response.message, 'success');
+                resetForm();
+                loadItems();
+            })
+            .catch(error => {
+                showNotification(error.message || 'An error occurred', 'error');
+                if (error.errors) {
+                    displayErrors(error.errors);
+                }
+            });
+        }
+
+        function editItem(id) {
+            fetch(`${API_BASE}/items.php?id=${id}`)
+                .then(response => response.json())
+                .then(response => {
+                    if (response.success) {
+                        const item = response.data;
+                        document.getElementById('item-id').value = item.id;
+                        document.getElementById('item-code').value = item.code;
+                        document.getElementById('item-name').value = item.name;
+                        document.getElementById('item-category').value = item.category_id;
+                        document.getElementById('item-unit').value = item.unit;
+                        document.getElementById('item-price').value = parseFloat(item.price).toFixed(2);
+                        document.getElementById('item-stock-quantity').value = parseFloat(item.stock_quantity).toFixed(2);
+                        document.getElementById('item-sales-tax-rate').value = parseFloat(item.sales_tax_rate).toFixed(2);
+                        
+                        document.getElementById('form-title').textContent = 'Edit Item';
+                        document.getElementById('save-btn').innerHTML = '<i class="fas fa-save"></i> Update Item';
+                        window.scrollTo(0, 0);
+                    } else {
+                        showNotification(response.message, 'error');
+                    }
+                }).catch(err => showNotification('Error fetching item details', 'error'));
+        }
+
+        function deleteItem(id) {
+            if (confirm('Are you sure you want to delete this item?')) {
+                fetch(`${API_BASE}/items.php?id=${id}`, { method: 'DELETE' })
+                .then(handleApiResponse)
+                .then(response => {
+                    showNotification(response.message, 'success');
+                    loadItems();
+                })
+                .catch(error => showNotification(error.message, 'error'));
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('item-form').reset();
+            document.getElementById('item-id').value = '';
+            document.getElementById('form-title').textContent = 'Add New Item';
+            document.getElementById('save-btn').innerHTML = '<i class="fas fa-save"></i> Save Item';
+            clearErrors();
+        }
+
+        function handleApiResponse(response) {
+            return response.json().then(data => {
+                if (!response.ok) {
+                    const error = new Error(data.message || 'Server error');
+                    error.errors = data.errors;
+                    throw error;
+                }
+                return data;
+            });
+        }
+
+        function displayErrors(errors) {
+            for (const key in errors) {
+                const errorElement = document.getElementById(`error-${key}`);
+                if (errorElement) {
+                    errorElement.textContent = errors[key];
+                }
+            }
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+        }
+
+        function showNotification(message, type) {
+            let notification = document.getElementById('notification');
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = 'notification';
+                notification.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 15px; border-radius: 4px; color: white; font-weight: bold; z-index: 1000; display: none; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+                document.body.appendChild(notification);
+            }
+            notification.textContent = message;
+            notification.style.backgroundColor = type === 'success' ? '#28a745' : '#dc3545';
+            notification.style.display = 'block';
+            setTimeout(() => { notification.style.display = 'none'; }, 3000);
+        }
+    </script>
+</body>
+</html>

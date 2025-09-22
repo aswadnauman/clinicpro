@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug App.js</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="container">
+                <h1><i class="fas fa-chart-line"></i> Debug App.js</h1>
+                <nav>
+                    <ul>
+                        <li><a href="#" class="nav-link active" data-view="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a href="#" class="nav-link" data-view="accounts"><i class="fas fa-book"></i> Accounts</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        <main class="container">
+            <div id="dashboard-view" class="view active">
+                <h2><i class="fas fa-tachometer-alt"></i> Dashboard Overview</h2>
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon sales">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Sales</h3>
+                            <p id="total-sales">₨0.00</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purchases">
+                            <i class="fas fa-shopping-basket"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Purchases</h3>
+                            <p id="total-purchases">₨0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="accounts-view" class="view">
+                <h2><i class="fas fa-book"></i> Accounts Management</h2>
+                <div id="accounts-list">
+                    <p>Loading accounts...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Simple test to check if JavaScript is working
+        console.log("Debug script loaded");
+        
+        // API Base URL
+        const API_BASE = './api';
+        
+        // DOM Elements
+        const views = document.querySelectorAll('.view');
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM loaded");
+            
+            // Navigation
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const view = this.getAttribute('data-view');
+                    switchView(view);
+                });
+            });
+            
+            // Load initial data
+            loadDashboardData();
+            loadAccounts();
+        });
+        
+        // View Management
+        function switchView(viewName) {
+            console.log("Switching to view:", viewName);
+            
+            // Hide all views
+            views.forEach(view => {
+                view.classList.remove('active');
+            });
+            
+            // Show selected view
+            const targetView = document.getElementById(`${viewName}-view`);
+            if (targetView) {
+                targetView.classList.add('active');
+            }
+            
+            // Update navigation
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-view') === viewName) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Load data based on view
+            switch(viewName) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'accounts':
+                    loadAccounts();
+                    break;
+            }
+        }
+        
+        function loadDashboardData() {
+            console.log("Loading dashboard data");
+            
+            // Load sales data
+            fetch(`${API_BASE}/reports.php?type=sales`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Sales data:", data);
+                    let totalSales = 0;
+                    if (Array.isArray(data)) {
+                        data.forEach(transaction => {
+                            totalSales += parseFloat(transaction.total_amount || transaction.amount || 0);
+                        });
+                    }
+                    document.getElementById('total-sales').textContent = '₨' + totalSales.toFixed(2);
+                })
+                .catch(error => {
+                    console.error('Error loading sales data:', error);
+                    document.getElementById('total-sales').textContent = '₨0.00';
+                });
+            
+            // Load purchases data
+            fetch(`${API_BASE}/reports.php?type=purchase`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Purchase data:", data);
+                    let totalPurchases = 0;
+                    if (Array.isArray(data)) {
+                        data.forEach(transaction => {
+                            totalPurchases += parseFloat(transaction.total_amount || transaction.amount || 0);
+                        });
+                    }
+                    document.getElementById('total-purchases').textContent = '₨' + totalPurchases.toFixed(2);
+                })
+                .catch(error => {
+                    console.error('Error loading purchases data:', error);
+                    document.getElementById('total-purchases').textContent = '₨0.00';
+                });
+        }
+        
+        function loadAccounts() {
+            console.log("Loading accounts");
+            fetch(`${API_BASE}/accounts.php`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Accounts data:", data);
+                    if (data.success) {
+                        renderAccountsList(data.data);
+                    } else {
+                        document.getElementById('accounts-list').innerHTML = '<p>Error loading accounts: ' + data.message + '</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading accounts:', error);
+                    document.getElementById('accounts-list').innerHTML = '<p>Error loading accounts: ' + error.message + '</p>';
+                });
+        }
+        
+        function renderAccountsList(accounts) {
+            console.log("Rendering accounts list");
+            let accountsHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Group</th>
+                            <th>Type</th>
+                            <th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            if (accounts.length > 0) {
+                accounts.forEach(account => {
+                    accountsHTML += `
+                        <tr>
+                            <td>${account.code}</td>
+                            <td>${account.name}</td>
+                            <td>${account.group_name}</td>
+                            <td>${account.type}</td>
+                            <td>₨${parseFloat(account.balance).toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                accountsHTML += `
+                    <tr>
+                        <td colspan="5">No accounts found</td>
+                    </tr>
+                `;
+            }
+            
+            accountsHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('accounts-list').innerHTML = accountsHTML;
+        }
+    </script>
+</body>
+</html>

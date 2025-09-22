@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart of Accounts - Trading Business</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .account-form {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .account-list {
+            margin: 20px auto;
+            max-width: 1200px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .account-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .account-table th,
+        .account-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .account-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .account-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .action-buttons button {
+            margin-right: 5px;
+        }
+        
+        .search-box {
+            margin: 20px auto;
+            max-width: 1200px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .ledger-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .ledger-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .ledger-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .ledger-table th,
+        .ledger-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .ledger-table th {
+            background-color: #f8f9fa;
+        }
+        
+        .ledger-table td.text-right,
+        .ledger-table th.text-right {
+            text-align: right;
+        }
+        
+        .ledger-table td.text-center,
+        .ledger-table th.text-center {
+            text-align: center;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .pagination button {
+            padding: 8px 16px;
+            margin: 0 4px;
+            border: 1px solid #ddd;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .pagination button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .pagination button:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-book"></i> Chart of Accounts</h1>
+            <nav>
+                <a href="../index.html"><i class="fas fa-home"></i> Home</a>
+                <a href="index.html"><i class="fas fa-tasks"></i> Forms</a>
+            </nav>
+        </header>
+        
+        <div id="message-container"></div>
+        
+        <div class="account-form">
+            <h2 id="form-title">Add New Account</h2>
+            <form id="account-form">
+                <input type="hidden" id="account-id">
+                <div class="form-group">
+                    <label for="account-code">Account Code *</label>
+                    <input type="text" id="account-code" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="account-name">Account Name *</label>
+                    <input type="text" id="account-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="account-group">Account Group *</label>
+                    <select id="account-group" required>
+                        <option value="">Select Account Group</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="account-type">Account Type *</label>
+                    <select id="account-type" required>
+                        <option value="">Select Account Type</option>
+                        <option value="Customer">Customer</option>
+                        <option value="Supplier">Supplier</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Bank">Bank</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="account-balance">Opening Balance</label>
+                    <input type="number" id="account-balance" step="0.01" value="0.00">
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" id="save-btn">
+                        <i class="fas fa-save"></i> Save Account
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="cancel-btn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Search accounts by code, name or group...">
+            <button class="btn btn-primary" id="search-btn">
+                <i class="fas fa-search"></i> Search
+            </button>
+            <button class="btn btn-secondary" id="refresh-btn">
+                <i class="fas fa-sync"></i> Refresh
+            </button>
+        </div>
+        
+        <div class="account-list">
+            <table class="account-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Group</th>
+                        <th>Type</th>
+                        <th>Balance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="accounts-tbody">
+                    <!-- Accounts will be loaded here -->
+                </tbody>
+            </table>
+            
+            <div class="pagination" id="pagination">
+                <!-- Pagination will be loaded here -->
+            </div>
+        </div>
+        
+        <div id="ledger-modal" class="ledger-modal">
+            <div class="ledger-content">
+                <span class="close">&times;</span>
+                <h2 id="ledger-title">Account Ledger</h2>
+                <div id="ledger-details"></div>
+                <table class="ledger-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Voucher No</th>
+                            <th>Description</th>
+                            <th class="text-right">Debit</th>
+                            <th class="text-right">Credit</th>
+                            <th class="text-right">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledger-tbody">
+                        <!-- Ledger entries will be loaded here -->
+                    </tbody>
+                </table>
+                <div class="text-right" style="margin-top: 20px;">
+                    <button class="btn btn-secondary" id="print-ledger">
+                        <i class="fas fa-print"></i> Print Ledger
+                    </button>
+                    <button class="btn btn-secondary" id="export-ledger">
+                        <i class="fas fa-file-export"></i> Export to CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentPage = 1;
+        const limit = 10;
+        let currentAccountId = null;
+        
+        // DOM Elements
+        const accountForm = document.getElementById('account-form');
+        const accountsTbody = document.getElementById('accounts-tbody');
+        const pagination = document.getElementById('pagination');
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const ledgerModal = document.getElementById('ledger-modal');
+        const ledgerTbody = document.getElementById('ledger-tbody');
+        const closeBtn = document.querySelector('.close');
+        const printLedgerBtn = document.getElementById('print-ledger');
+        const exportLedgerBtn = document.getElementById('export-ledger');
+        const ledgerTitle = document.getElementById('ledger-title');
+        const ledgerDetails = document.getElementById('ledger-details');
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAccountGroups();
+            loadAccounts();
+            
+            // Event listeners
+            accountForm.addEventListener('submit', saveAccount);
+            searchBtn.addEventListener('click', () => loadAccounts(1));
+            refreshBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                loadAccounts(1);
+            });
+            cancelBtn.addEventListener('click', resetForm);
+            closeBtn.addEventListener('click', () => ledgerModal.style.display = 'none');
+            printLedgerBtn.addEventListener('click', printLedger);
+            exportLedgerBtn.addEventListener('click', exportLedgerToCSV);
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (event) => {
+                if (event.target === ledgerModal) {
+                    ledgerModal.style.display = 'none';
+                }
+            });
+        });
+        
+        // Load account groups for dropdown
+        async function loadAccountGroups() {
+            try {
+                const response = await fetch('../api/account_groups.php');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const select = document.getElementById('account-group');
+                    select.innerHTML = '<option value="">Select Account Group</option>';
+                    
+                    result.data.forEach(group => {
+                        const option = document.createElement('option');
+                        option.value = group.id;
+                        option.textContent = group.name;
+                        select.appendChild(option);
+                    });
+                } else {
+                    showMessage('Error loading account groups: ' + result.message, 'danger');
+                }
+            } catch (error) {
+                showMessage('Error loading account groups: ' + error.message, 'danger');
+            }
+        }
+        
+        // Load accounts with pagination and search
+        async function loadAccounts(page = 1) {
+            try {
+                currentPage = page;
+                const search = searchInput.value;
+                let url = `../api/accounts.php?page=${page}&limit=${limit}`;
+                
+                if (search) {
+                    url += `&search=${encodeURIComponent(search)}`;
+                }
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderAccounts(result.data);
+                    renderPagination(result.pagination);
+                } else {
+                    showMessage('Error loading accounts: ' + result.message, 'danger');
+                }
+            } catch (error) {
+                showMessage('Error loading accounts: ' + error.message, 'danger');
+            }
+        }
+        
+        // Render accounts in the table
+        function renderAccounts(accounts) {
+            accountsTbody.innerHTML = '';
+            
+            if (accounts.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="6" class="text-center">No accounts found</td>';
+                accountsTbody.appendChild(row);
+                return;
+            }
+            
+            accounts.forEach(account => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${account.code}</td>
+                    <td>${account.name}</td>
+                    <td>${account.group_name}</td>
+                    <td>${account.type}</td>
+                    <td>${parseFloat(account.balance).toFixed(2)}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-primary btn-sm" onclick="viewLedger(${account.id})">
+                            <i class="fas fa-book"></i> Ledger
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="editAccount(${account.id})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteAccount(${account.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </td>
+                `;
+                accountsTbody.appendChild(row);
+            });
+        }
+        
+        // Render pagination controls
+        function renderPagination(paginationData) {
+            pagination.innerHTML = '';
+            
+            const { page, totalPages } = paginationData;
+            
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.innerHTML = '&laquo; Prev';
+            prevButton.disabled = page <= 1;
+            prevButton.addEventListener('click', () => loadAccounts(page - 1));
+            pagination.appendChild(prevButton);
+            
+            // Page buttons
+            for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.classList.toggle('active', i === page);
+                pageButton.addEventListener('click', () => loadAccounts(i));
+                pagination.appendChild(pageButton);
+            }
+            
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.innerHTML = 'Next &raquo;';
+            nextButton.disabled = page >= totalPages;
+            nextButton.addEventListener('click', () => loadAccounts(page + 1));
+            pagination.appendChild(nextButton);
+        }
+        
+        // Save account (create or update)
+        async function saveAccount(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('account-id').value;
+            const code = document.getElementById('account-code').value;
+            const name = document.getElementById('account-name').value;
+            const groupId = document.getElementById('account-group').value;
+            const type = document.getElementById('account-type').value;
+            const balance = document.getElementById('account-balance').value || 0;
+            
+            // Validate required fields
+            if (!code || !name || !groupId || !type) {
+                showMessage('Please fill in all required fields', 'danger');
+                return;
+            }
+            
+            const accountData = {
+                code,
+                name,
+                group_id: parseInt(groupId),
+                type,
+                balance: parseFloat(balance)
+            };
+            
+            try {
+                let url = '../api/accounts.php';
+                let method = 'POST';
+                
+                if (id) {
+                    url += `?id=${id}`;
+                    method = 'PUT';
+                }
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(accountData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    resetForm();
+                    loadAccounts(currentPage);
+                } else {
+                    showMessage('Error: ' + result.message, 'danger');
+                    if (result.errors) {
+                        Object.keys(result.errors).forEach(field => {
+                            showMessage(`${field}: ${result.errors[field]}`, 'danger');
+                        });
+                    }
+                }
+            } catch (error) {
+                showMessage('Error saving account: ' + error.message, 'danger');
+            }
+        }
+        
+        // Edit account
+        async function editAccount(id) {
+            try {
+                const response = await fetch(`../api/accounts.php?id=${id}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const account = result.data;
+                    document.getElementById('account-id').value = account.id;
+                    document.getElementById('account-code').value = account.code;
+                    document.getElementById('account-name').value = account.name;
+                    document.getElementById('account-group').value = account.group_id;
+                    document.getElementById('account-type').value = account.type;
+                    document.getElementById('account-balance').value = account.balance;
+                    
+                    document.getElementById('form-title').textContent = 'Edit Account';
+                    document.getElementById('save-btn').innerHTML = '<i class="fas fa-save"></i> Update Account';
+                    
+                    // Scroll to form
+                    document.querySelector('.account-form').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    showMessage('Error loading account: ' + result.message, 'danger');
+                }
+            } catch (error) {
+                showMessage('Error loading account: ' + error.message, 'danger');
+            }
+        }
+        
+        // Delete account
+        async function deleteAccount(id) {
+            if (!confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`../api/accounts.php?id=${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    loadAccounts(currentPage);
+                } else {
+                    showMessage('Error deleting account: ' + result.message, 'danger');
+                }
+            } catch (error) {
+                showMessage('Error deleting account: ' + error.message, 'danger');
+            }
+        }
+        
+        // View account ledger
+        async function viewLedger(id) {
+            try {
+                const response = await fetch(`../api/accounts.php?action=ledger&id=${id}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentAccountId = id;
+                    const account = result.account;
+                    const transactions = result.transactions;
+                    
+                    ledgerTitle.textContent = `Ledger: ${account.code} - ${account.name}`;
+                    ledgerDetails.innerHTML = `
+                        <p><strong>Account Group:</strong> ${account.group_name}</p>
+                        <p><strong>Account Type:</strong> ${account.type}</p>
+                        <p><strong>Current Balance:</strong> ${parseFloat(account.balance).toFixed(2)}</p>
+                    `;
+                    
+                    ledgerTbody.innerHTML = '';
+                    
+                    if (transactions.length === 0) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = '<td colspan="6" class="text-center">No transactions found</td>';
+                        ledgerTbody.appendChild(row);
+                    } else {
+                        transactions.forEach(transaction => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${transaction.date}</td>
+                                <td>${transaction.voucher_no}</td>
+                                <td>${transaction.description}</td>
+                                <td class="text-right">${transaction.type === 'Debit' ? parseFloat(transaction.amount).toFixed(2) : ''}</td>
+                                <td class="text-right">${transaction.type === 'Credit' ? parseFloat(transaction.amount).toFixed(2) : ''}</td>
+                                <td class="text-right">${parseFloat(transaction.running_balance).toFixed(2)}</td>
+                            `;
+                            ledgerTbody.appendChild(row);
+                        });
+                    }
+                    
+                    ledgerModal.style.display = 'block';
+                } else {
+                    showMessage('Error loading ledger: ' + result.message, 'danger');
+                }
+            } catch (error) {
+                showMessage('Error loading ledger: ' + error.message, 'danger');
+            }
+        }
+        
+        // Print ledger
+        function printLedger() {
+            const printWindow = window.open('', '_blank');
+            const ledgerContent = document.querySelector('.ledger-content').cloneNode(true);
+            const closeBtn = ledgerContent.querySelector('.close');
+            const actionButtons = ledgerContent.querySelector('.text-right');
+            
+            if (closeBtn) closeBtn.remove();
+            if (actionButtons) actionButtons.remove();
+            
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Account Ledger</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; }
+                            table { width: 100%; border-collapse: collapse; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #f2f2f2; }
+                            .text-right { text-align: right; }
+                        </style>
+                    </head>
+                    <body>
+                        ${ledgerContent.innerHTML}
+                    </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.print();
+        }
+        
+        // Export ledger to CSV
+        function exportLedgerToCSV() {
+            const rows = [];
+            const headers = ['Date', 'Voucher No', 'Description', 'Debit', 'Credit', 'Balance'];
+            rows.push(headers.join(','));
+            
+            const ledgerRows = document.querySelectorAll('#ledger-tbody tr');
+            ledgerRows.forEach(row => {
+                const cols = row.querySelectorAll('td');
+                const rowData = [];
+                cols.forEach(col => {
+                    rowData.push(`"${col.textContent}"`);
+                });
+                rows.push(rowData.join(','));
+            });
+            
+            const csvContent = rows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'account_ledger.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+        
+        // Reset form
+        function resetForm() {
+            accountForm.reset();
+            document.getElementById('account-id').value = '';
+            document.getElementById('form-title').textContent = 'Add New Account';
+            document.getElementById('save-btn').innerHTML = '<i class="fas fa-save"></i> Save Account';
+        }
+        
+        // Show message
+        function showMessage(message, type) {
+            const messageContainer = document.getElementById('message-container');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <span>${message}</span>
+                <button class="close-alert" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            messageContainer.appendChild(alertDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+            
+            // Scroll to message
+            alertDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Make functions available globally
+        window.editAccount = editAccount;
+        window.deleteAccount = deleteAccount;
+        window.viewLedger = viewLedger;
+    </script>
+</body>
+</html>

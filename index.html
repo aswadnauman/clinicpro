@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Business Accounts & Inventory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header>
+            <div class="container">
+                <h1><i class="fas fa-chart-line"></i> Trading Business Manager</h1>
+                <nav>
+                    <ul>
+                        <li><a href="#" class="nav-link active" data-view="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a href="#" class="nav-link" data-view="accounts"><i class="fas fa-book"></i> Accounts</a></li>
+                        <li><a href="#" class="nav-link" data-view="inventory"><i class="fas fa-boxes"></i> Inventory</a></li>
+                        <li><a href="#" class="nav-link" data-view="transactions"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
+                        <li><a href="forms/index.html" class="nav-link"><i class="fas fa-folder-open"></i> Forms</a></li>
+                        <li><a href="#" class="nav-link" data-view="reports"><i class="fas fa-chart-bar"></i> Reports</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container">
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view active">
+                <h2><i class="fas fa-tachometer-alt"></i> Dashboard Overview</h2>
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon sales">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Sales</h3>
+                            <p id="total-sales">₨0.00</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purchases">
+                            <i class="fas fa-shopping-basket"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Purchases</h3>
+                            <p id="total-purchases">₨0.00</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon expenses">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Expenses</h3>
+                            <p id="total-expenses">₨0.00</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stock">
+                            <i class="fas fa-warehouse"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Stock Value</h3>
+                            <p id="total-stock">₨0.00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-charts">
+                    <div class="chart-container">
+                        <h3>Recent Transactions</h3>
+                        <div id="recent-transactions">
+                            <p>Loading transactions...</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Low Stock Items</h3>
+                        <div id="low-stock-items">
+                            <p>Loading stock information...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accounts View -->
+            <div id="accounts-view" class="view">
+                <h2><i class="fas fa-book"></i> Accounts Management</h2>
+                
+                <div class="tabs">
+                    <button class="tab-button active" data-tab="chart-of-accounts">Chart of Accounts</button>
+                    <button class="tab-button" data-tab="customers">Customers</button>
+                    <button class="tab-button" data-tab="suppliers">Suppliers</button>
+                    <button class="tab-button" data-tab="cash-bank">Cash & Bank</button>
+                </div>
+                
+                <div class="tab-content">
+                    <div id="chart-of-accounts" class="tab-panel active">
+                        <div class="actions">
+                            <button id="add-account-group" class="btn"><i class="fas fa-plus"></i> Add Group</button>
+                            <button id="add-account" class="btn"><i class="fas fa-plus"></i> Add Account</button>
+                        </div>
+                        <div id="accounts-list">
+                            <p>Loading accounts...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="customers" class="tab-panel">
+                        <div class="actions">
+                            <button id="add-customer" class="btn"><i class="fas fa-plus"></i> Add Customer</button>
+                        </div>
+                        <div id="customers-list">
+                            <p>Loading customers...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="suppliers" class="tab-panel">
+                        <div class="actions">
+                            <button id="add-supplier" class="btn"><i class="fas fa-plus"></i> Add Supplier</button>
+                        </div>
+                        <div id="suppliers-list">
+                            <p>Loading suppliers...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="cash-bank" class="tab-panel">
+                        <div class="actions">
+                            <button id="add-cash-bank" class="btn"><i class="fas fa-plus"></i> Add Account</button>
+                        </div>
+                        <div id="cash-bank-list">
+                            <p>Loading cash & bank accounts...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory View -->
+            <div id="inventory-view" class="view">
+                <h2><i class="fas fa-boxes"></i> Inventory Management</h2>
+                
+                <div class="tabs">
+                    <button class="tab-button active" data-tab="items">Items</button>
+                    <button class="tab-button" data-tab="categories">Categories</button>
+                </div>
+                
+                <div class="tab-content">
+                    <div id="items" class="tab-panel active">
+                        <div class="actions">
+                            <button id="add-item" class="btn"><i class="fas fa-plus"></i> Add Item</button>
+                        </div>
+                        <div id="items-list">
+                            <p>Loading items...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="categories" class="tab-panel">
+                        <div class="actions">
+                            <button id="add-category" class="btn"><i class="fas fa-plus"></i> Add Category</button>
+                        </div>
+                        <div id="categories-list">
+                            <p>Loading categories...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions View -->
+            <div id="transactions-view" class="view">
+                <h2><i class="fas fa-exchange-alt"></i> Transactions</h2>
+                
+                <div class="tabs">
+                    <button class="tab-button active" data-tab="sales">Sales</button>
+                    <button class="tab-button" data-tab="purchases">Purchases</button>
+                    <button class="tab-button" data-tab="payments">Payments</button>
+                    <button class="tab-button" data-tab="receipts">Receipts</button>
+                    <button class="tab-button" data-tab="jv">Journal Vouchers</button>
+                </div>
+                
+                <div class="tab-content">
+                    <div id="sales" class="tab-panel active">
+                        <div class="actions">
+                            <button id="add-sale" class="btn"><i class="fas fa-plus"></i> New Sale</button>
+                        </div>
+                        <div id="sales-list">
+                            <p>Loading sales...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="purchases" class="tab-panel">
+                        <div class="actions">
+                            <button id="add-purchase" class="btn"><i class="fas fa-plus"></i> New Purchase</button>
+                        </div>
+                        <div id="purchases-list">
+                            <p>Loading purchases...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="payments" class="tab-panel">
+                        <div class="actions">
+                            <button id="add-payment" class="btn"><i class="fas fa-plus"></i> New Payment</button>
+                        </div>
+                        <div id="payments-list">
+                            <p>Loading payments...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="receipts" class="tab-panel">
+                        <div class="actions">
+                            <button id="add-receipt" class="btn"><i class="fas fa-plus"></i> New Receipt</button>
+                        </div>
+                        <div id="receipts-list">
+                            <p>Loading receipts...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="jv" class="tab-panel">
+                        <div class="actions">
+                            <button id="add-jv" class="btn"><i class="fas fa-plus"></i> New Journal Voucher</button>
+                        </div>
+                        <div id="jv-list">
+                            <p>Loading journal vouchers...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports View -->
+            <div id="reports-view" class="view">
+                <h2><i class="fas fa-file-alt"></i> Reports</h2>
+                
+                <div class="tabs">
+                    <button class="tab-button active" data-tab="account-reports">Account Reports</button>
+                    <button class="tab-button" data-tab="inventory-reports">Inventory Reports</button>
+                    <button class="tab-button" data-tab="fbr-reports">FBR Reports</button>
+                </div>
+                
+                <div class="tab-content">
+                    <div id="account-reports" class="tab-panel active">
+                        <div class="report-filters">
+                            <div class="filter-group">
+                                <label for="report-type">Report Type:</label>
+                                <select id="report-type">
+                                    <option value="">Select Report Type</option>
+                                    <option value="ledger">Ledger Report</option>
+                                    <option value="trial_balance">Trial Balance</option>
+                                    <option value="cashbook">Cash Book</option>
+                                    <option value="bankbook">Bank Book</option>
+                                    <option value="customer_ledger">Customer Ledger</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group" id="account-filter" style="display: none;">
+                                <label for="account-select">Account:</label>
+                                <select id="account-select">
+                                    <option value="">Select Account</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group" id="party-filter" style="display: none;">
+                                <label for="party-select">Customer:</label>
+                                <select id="party-select">
+                                    <option value="">Select Customer</option>
+                                </select>
+                            </div>
+                            
+                            <button id="generate-report" class="btn"><i class="fas fa-chart-bar"></i> Generate Report</button>
+                            <button id="print-report" class="btn" disabled><i class="fas fa-print"></i> Print</button>
+                            <button id="export-pdf" class="btn" disabled><i class="fas fa-file-pdf"></i> Export to PDF</button>
+                        </div>
+                        
+                        <div id="report-output">
+                            <p>Select a report type and click "Generate Report"</p>
+                        </div>
+                    </div>
+                    
+                    <div id="inventory-reports" class="tab-panel">
+                        <div class="report-filters">
+                            <div class="filter-group">
+                                <label for="inv-report-type">Report Type:</label>
+                                <select id="inv-report-type">
+                                    <option value="">Select Report Type</option>
+                                    <option value="sales">Sales Report</option>
+                                    <option value="purchase">Purchase Report</option>
+                                    <option value="stock">Stock Report</option>
+                                </select>
+                            </div>
+                            
+                            <button id="generate-inv-report" class="btn"><i class="fas fa-chart-bar"></i> Generate Report</button>
+                            <button id="print-inv-report" class="btn" disabled><i class="fas fa-print"></i> Print</button>
+                            <button id="export-inv-pdf" class="btn" disabled><i class="fas fa-file-pdf"></i> Export to PDF</button>
+                        </div>
+                        
+                        <div id="inv-report-output">
+                            <p>Select a report type and click "Generate Report"</p>
+                        </div>
+                    </div>
+                    
+                    <div id="fbr-reports" class="tab-panel">
+                        <div class="report-filters">
+                            <div class="filter-group">
+                                <label for="fbr-report-type">Report Type:</label>
+                                <select id="fbr-report-type">
+                                    <option value="">Select Report Type</option>
+                                    <option value="sales_tax_register">FBR Sales Tax Register</option>
+                                    <option value="daily_sales">Daily Sales Report</option>
+                                    <option value="sales_summary">Sales Summary</option>
+                                    <option value="customer_summary">Customer Summary</option>
+                                    <option value="payment_collection">Payment Collection Report</option>
+                                    <option value="top_customers">Top Customers</option>
+                                    <option value="party_supplier">Party-wise (Supplier)</option>
+                                    <option value="party_customer">Party-wise (Customer)</option>
+                                    <option value="brand_sales">Brand-wise Sales</option>
+                                    <option value="monthly_summary">Monthly Summary</option>
+                                    <option value="profit_loss">Profit & Loss Statement</option>
+                                    <option value="balance_sheet">Balance Sheet</option>
+                                    <option value="client_ageing">Client Ageing Report</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="from-date">From Date:</label>
+                                <input type="date" id="from-date" value="2023-06-01">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="to-date">To Date:</label>
+                                <input type="date" id="to-date" value="2023-06-30">
+                            </div>
+                            
+                            <button id="generate-fbr-report" class="btn"><i class="fas fa-chart-bar"></i> Generate Report</button>
+                            <button id="print-fbr-report" class="btn" disabled><i class="fas fa-print"></i> Print</button>
+                            <button id="export-fbr-pdf" class="btn" disabled><i class="fas fa-file-pdf"></i> Export to PDF</button>
+                            <button id="export-fbr-csv" class="btn" disabled><i class="fas fa-file-csv"></i> Export to CSV</button>
+                        </div>
+                        
+                        <div id="fbr-report-output">
+                            <p>Select a report type and click "Generate Report"</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <div class="container">
+                <p>&copy; 2023 Trading Business Manager. All rights reserved.</p>
+                <div class="features-section">
+                    <h3>Core Features</h3>
+                    <div class="features-grid">
+                        <div class="card">
+                            <h3><i class="fas fa-book"></i> Chart of Accounts</h3>
+                            <p>Manage your chart of accounts with full CRUD functionality, ledger view, and trial balance integration.</p>
+                            <a href="forms/chart_of_accounts.html" class="btn">Manage Accounts</a>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fas fa-users"></i> Parties Management</h3>
+                            <p>Manage customers, suppliers, and other business partners with complete record keeping.</p>
+                            <a href="forms/parties.html" class="btn">Manage Parties</a>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fas fa-boxes"></i> Inventory Management</h3>
+                            <p>Track items, categories, and stock levels across multiple warehouses with detailed reporting.</p>
+                            <a href="forms/items.html" class="btn">Manage Inventory</a>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fas fa-receipt"></i> Transaction Processing</h3>
+                            <p>Create and manage sales, purchases, payments, receipts, and journal vouchers with ease.</p>
+                            <div class="transaction-links">
+                                <a href="forms/sales_voucher.html" class="btn small">Sales Voucher</a>
+                                <a href="forms/purchase_voucher.html" class="btn small">Purchase Voucher</a>
+                                <a href="forms/payment_voucher.html" class="btn small">Payment Voucher</a>
+                                <a href="forms/receipt_voucher.html" class="btn small">Receipt Voucher</a>
+                                <a href="forms/journal_voucher.html" class="btn small">Journal Voucher</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+    <script>
+        document.getElementById('add-category').addEventListener('click', function() {
+            window.location.href = 'forms/categories.html';
+        });
+    </script>
+</body>
+</html>

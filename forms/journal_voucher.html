@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal Voucher</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .form-container { max-width: 1200px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 5px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn:hover { opacity: 0.9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; }
+        .actions { display: flex; gap: 5px; }
+        .action-btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
+        .remove-btn { background: #dc3545; color: white; }
+        .error-message { color: #dc3545; font-size: 12px; margin-top: 4px; }
+        .totals { margin-top: 20px; text-align: right; }
+        .totals p { font-size: 18px; font-weight: bold; }
+        .balance-info { text-align: right; font-size: 16px; font-weight: bold; }
+        .balance-info.unbalanced { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-book-open"></i> Journal Voucher</h1>
+        
+        <div class="form-container">
+            <form id="journal-form">
+                <input type="hidden" id="transaction-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="voucher-no">Voucher No</label>
+                        <input type="text" id="voucher-no" required>
+                        <div class="error-message" id="error-voucher_no"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="voucher-date">Date</label>
+                        <input type="date" id="voucher-date" required>
+                        <div class="error-message" id="error-date"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" rows="2"></textarea>
+                </div>
+
+                <table id="details-table">
+                    <thead>
+                        <tr>
+                            <th>Account</th>
+                            <th>Debit</th>
+                            <th>Credit</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Detail rows will be added here -->
+                    </tbody>
+                </table>
+                <button type="button" id="add-detail-btn" class="btn btn-success"><i class="fas fa-plus"></i> Add Entry</button>
+
+                <div class="totals">
+                    <p>Debit Total: <span id="debit-total">0.00</span></p>
+                    <p>Credit Total: <span id="credit-total">0.00</span></p>
+                    <p class="balance-info" id="balance-info">Balanced</p>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" id="save-btn" class="btn btn-primary"><i class="fas fa-save"></i> Save Voucher</button>
+                    <button type="button" id="cancel-btn" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '../api';
+        let accounts = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const transactionId = urlParams.get('id');
+            if (transactionId) {
+                loadTransaction(transactionId);
+            }
+
+            loadAccounts();
+
+            document.getElementById('journal-form').addEventListener('submit', saveVoucher);
+            document.getElementById('add-detail-btn').addEventListener('click', addDetailRow);
+            document.getElementById('cancel-btn').addEventListener('click', () => { window.history.back(); });
+        });
+
+        function loadAccounts() {
+            fetch(`${API_BASE}/accounts.php`)
+                .then(response => response.json())
+                .then(response => {
+                    if (response.success) {
+                        accounts = response.data;
+                        addDetailRow(); // Add one row by default
+                        addDetailRow(); // Add second row by default
+                    } else {
+                        showNotification(response.message, 'error');
+                    }
+                }).catch(err => showNotification('Error loading accounts', 'error'));
+        }
+
+        function loadTransaction(id) {
+            fetch(`${API_BASE}/transactions.php?id=${id}`)
+                .then(response => response.json())
+                .then(response => {
+                    if (response.id) {
+                        const transaction = response;
+                        document.getElementById('transaction-id').value = transaction.id;
+                        document.getElementById('voucher-no').value = transaction.voucher_no;
+                        document.getElementById('voucher-date').value = transaction.date;
+                        document.getElementById('description').value = transaction.description;
+
+                        const tbody = document.querySelector('#details-table tbody');
+                        tbody.innerHTML = '';
+                        transaction.details.forEach(detail => {
+                            addDetailRow(detail);
+                        });
+                        calculateTotals();
+                        document.getElementById('save-btn').innerHTML = '<i class="fas fa-save"></i> Update Voucher';
+                    } else {
+                        showNotification(response.message, 'error');
+                    }
+                }).catch(err => showNotification('Error loading transaction', 'error'));
+        }
+
+        function addDetailRow(detail = null) {
+            const tbody = document.querySelector('#details-table tbody');
+            const row = document.createElement('tr');
+            
+            let accountOptions = '<option value="">Select Account</option>';
+            accounts.forEach(account => {
+                accountOptions += `<option value="${account.id}">${account.name}</option>`;
+            });
+
+            row.innerHTML = `
+                <td><select class="detail-account" required>${accountOptions}</select></td>
+                <td><input type="number" class="detail-debit" value="0.00" min="0" step="0.01"></td>
+                <td><input type="number" class="detail-credit" value="0.00" min="0" step="0.01"></td>
+                <td><button type="button" class="btn remove-btn"><i class="fas fa-trash"></i></button></td>
+            `;
+
+            tbody.appendChild(row);
+
+            if (detail) {
+                row.querySelector('.detail-account').value = detail.account_id;
+                if (detail.type === 'Debit') {
+                    row.querySelector('.detail-debit').value = detail.amount;
+                } else {
+                    row.querySelector('.detail-credit').value = detail.amount;
+                }
+            }
+
+            row.querySelector('.detail-debit').addEventListener('input', () => {
+                row.querySelector('.detail-credit').value = 0;
+                calculateTotals();
+            });
+            row.querySelector('.detail-credit').addEventListener('input', () => {
+                row.querySelector('.detail-debit').value = 0;
+                calculateTotals();
+            });
+            row.querySelector('.remove-btn').addEventListener('click', () => { row.remove(); calculateTotals(); });
+        }
+
+        function calculateTotals() {
+            let debitTotal = 0;
+            let creditTotal = 0;
+
+            document.querySelectorAll('#details-table tbody tr').forEach(row => {
+                debitTotal += parseFloat(row.querySelector('.detail-debit').value) || 0;
+                creditTotal += parseFloat(row.querySelector('.detail-credit').value) || 0;
+            });
+
+            document.getElementById('debit-total').textContent = debitTotal.toFixed(2);
+            document.getElementById('credit-total').textContent = creditTotal.toFixed(2);
+
+            const balanceInfo = document.getElementById('balance-info');
+            if (Math.abs(debitTotal - creditTotal) > 0.01) {
+                balanceInfo.textContent = 'Unbalanced';
+                balanceInfo.classList.add('unbalanced');
+            } else {
+                balanceInfo.textContent = 'Balanced';
+                balanceInfo.classList.remove('unbalanced');
+            }
+        }
+
+        function saveVoucher(e) {
+            e.preventDefault();
+            clearErrors();
+
+            const transactionId = document.getElementById('transaction-id').value;
+            const details = [];
+            let debitTotal = 0;
+            let creditTotal = 0;
+
+            document.querySelectorAll('#details-table tbody tr').forEach(row => {
+                const debit = parseFloat(row.querySelector('.detail-debit').value) || 0;
+                const credit = parseFloat(row.querySelector('.detail-credit').value) || 0;
+                debitTotal += debit;
+                creditTotal += credit;
+
+                if (debit > 0) {
+                    details.push({
+                        account_id: row.querySelector('.detail-account').value,
+                        amount: debit,
+                        type: 'Debit'
+                    });
+                } else if (credit > 0) {
+                    details.push({
+                        account_id: row.querySelector('.detail-account').value,
+                        amount: credit,
+                        type: 'Credit'
+                    });
+                }
+            });
+
+            if (Math.abs(debitTotal - creditTotal) > 0.01) {
+                showNotification('Debit and Credit totals must be equal.', 'error');
+                return;
+            }
+
+            const voucherData = {
+                id: transactionId || null,
+                voucher_no: document.getElementById('voucher-no').value,
+                date: document.getElementById('voucher-date').value,
+                type: 'Journal',
+                description: document.getElementById('description').value,
+                amount: debitTotal, // For journal, amount can be debit or credit total
+                tax_amount: 0,
+                total_amount: debitTotal,
+                details: details
+            };
+
+            const method = transactionId ? 'PUT' : 'POST';
+            const url = `${API_BASE}/transactions.php`;
+
+            fetch(url, { 
+                method: method, 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(voucherData) 
+            })
+            .then(handleApiResponse)
+            .then(response => {
+                showNotification(response.message, 'success');
+                window.location.href = '../app.html#transactions';
+            })
+            .catch(error => {
+                showNotification(error.message || 'An error occurred', 'error');
+                if (error.errors) {
+                    displayErrors(error.errors);
+                }
+            });
+        }
+
+        function handleApiResponse(response) {
+            return response.json().then(data => {
+                if (!response.ok) {
+                    const error = new Error(data.message || 'Server error');
+                    error.errors = data.errors;
+                    throw error;
+                }
+                return data;
+            });
+        }
+
+        function displayErrors(errors) {
+            for (const key in errors) {
+                const errorElement = document.getElementById(`error-${key}`);
+                if (errorElement) {
+                    errorElement.textContent = errors[key];
+                }
+            }
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+        }
+
+        function showNotification(message, type) {
+            let notification = document.getElementById('notification');
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = 'notification';
+                notification.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 15px; border-radius: 4px; color: white; font-weight: bold; z-index: 1000; display: none; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+                document.body.appendChild(notification);
+            }
+            notification.textContent = message;
+            notification.style.backgroundColor = type === 'success' ? '#28a745' : '#dc3545';
+            notification.style.display = 'block';
+            setTimeout(() => { notification.style.display = 'none'; }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Operations Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            display: none;
+        }
+        .btn {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .edit-btn {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .module-header h2 {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>CRUD Operations Test</h1>
+    <p>This page tests all Create, Read, Update, Delete operations for the application modules.</p>
+    
+    <!-- Accounts Module -->
+    <div class="test-section">
+        <div class="module-header">
+            <h2>Accounts Module</h2>
+            <button id="refresh-accounts" class="btn">Refresh</button>
+        </div>
+        
+        <div class="form-group">
+            <label for="account-code">Account Code:</label>
+            <input type="text" id="account-code" placeholder="e.g., ACC-001">
+        </div>
+        
+        <div class="form-group">
+            <label for="account-name">Account Name:</label>
+            <input type="text" id="account-name" placeholder="e.g., Sample Account">
+        </div>
+        
+        <div class="form-group">
+            <label for="account-group">Account Group:</label>
+            <select id="account-group">
+                <option value="1">Current Assets</option>
+                <option value="2">Fixed Assets</option>
+                <option value="3">Current Liabilities</option>
+                <option value="4">Capital</option>
+                <option value="5">Sales</option>
+                <option value="6">Purchase</option>
+                <option value="7">Expenses</option>
+                <option value="8">Cash & Bank</option>
+                <option value="9">Sales Tax</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="account-type">Account Type:</label>
+            <select id="account-type">
+                <option value="Customer">Customer</option>
+                <option value="Supplier">Supplier</option>
+                <option value="Cash">Cash</option>
+                <option value="Bank">Bank</option>
+                <option value="General">General</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="account-balance">Balance:</label>
+            <input type="number" id="account-balance" step="0.01" value="0.00">
+        </div>
+        
+        <button id="create-account" class="btn btn-success">Create Account</button>
+        <button id="update-account" class="btn" disabled>Update Account</button>
+        <button id="reset-account-form" class="btn">Reset</button>
+        
+        <div id="account-result" class="test-result" style="display: none;"></div>
+        
+        <table id="accounts-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Group</th>
+                    <th>Type</th>
+                    <th>Balance</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Accounts will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Items Module -->
+    <div class="test-section">
+        <div class="module-header">
+            <h2>Items Module</h2>
+            <button id="refresh-items" class="btn">Refresh</button>
+        </div>
+        
+        <div class="form-group">
+            <label for="item-code">Item Code:</label>
+            <input type="text" id="item-code" placeholder="e.g., ITEM-001">
+        </div>
+        
+        <div class="form-group">
+            <label for="item-name">Item Name:</label>
+            <input type="text" id="item-name" placeholder="e.g., Sample Item">
+        </div>
+        
+        <div class="form-group">
+            <label for="item-category">Category:</label>
+            <select id="item-category">
+                <option value="1">Acids</option>
+                <option value="2">Bases</option>
+                <option value="3">Solvents</option>
+                <option value="4">Fertilizers</option>
+                <option value="5">Industrial Chemicals</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="item-unit">Unit:</label>
+            <input type="text" id="item-unit" placeholder="e.g., kg, liter">
+        </div>
+        
+        <div class="form-group">
+            <label for="item-price">Price:</label>
+            <input type="number" id="item-price" step="0.01" value="0.00">
+        </div>
+        
+        <div class="form-group">
+            <label for="item-stock">Stock Quantity:</label>
+            <input type="number" id="item-stock" step="0.01" value="0.00">
+        </div>
+        
+        <div class="form-group">
+            <label for="item-tax-rate">Sales Tax Rate (%):</label>
+            <input type="number" id="item-tax-rate" step="0.01" value="0.00">
+        </div>
+        
+        <button id="create-item" class="btn btn-success">Create Item</button>
+        <button id="update-item" class="btn" disabled>Update Item</button>
+        <button id="reset-item-form" class="btn">Reset</button>
+        
+        <div id="item-result" class="test-result" style="display: none;"></div>
+        
+        <table id="items-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Unit</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Tax Rate</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Items will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Parties Module -->
+    <div class="test-section">
+        <div class="module-header">
+            <h2>Parties Module</h2>
+            <button id="refresh-parties" class="btn">Refresh</button>
+        </div>
+        
+        <div class="form-group">
+            <label for="party-code">Party Code:</label>
+            <input type="text" id="party-code" placeholder="e.g., PARTY-001">
+        </div>
+        
+        <div class="form-group">
+            <label for="party-name">Party Name:</label>
+            <input type="text" id="party-name" placeholder="e.g., Sample Party">
+        </div>
+        
+        <div class="form-group">
+            <label for="party-type">Party Type:</label>
+            <select id="party-type">
+                <option value="Customer">Customer</option>
+                <option value="Supplier">Supplier</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="party-address">Address:</label>
+            <input type="text" id="party-address" placeholder="Street address">
+        </div>
+        
+        <div class="form-group">
+            <label for="party-city">City:</label>
+            <input type="text" id="party-city" placeholder="City">
+        </div>
+        
+        <div class="form-group">
+            <label for="party-phone">Phone:</label>
+            <input type="text" id="party-phone" placeholder="Phone number">
+        </div>
+        
+        <div class="form-group">
+            <label for="party-email">Email:</label>
+            <input type="email" id="party-email" placeholder="Email address">
+        </div>
+        
+        <div class="form-group">
+            <label for="party-ntn">NTN:</label>
+            <input type="text" id="party-ntn" placeholder="National Tax Number">
+        </div>
+        
+        <div class="form-group">
+            <label for="party-strn">STRN:</label>
+            <input type="text" id="party-strn" placeholder="Sales Tax Registration Number">
+        </div>
+        
+        <div class="form-group">
+            <label for="party-balance">Balance:</label>
+            <input type="number" id="party-balance" step="0.01" value="0.00">
+        </div>
+        
+        <button id="create-party" class="btn btn-success">Create Party</button>
+        <button id="update-party" class="btn" disabled>Update Party</button>
+        <button id="reset-party-form" class="btn">Reset</button>
+        
+        <div id="party-result" class="test-result" style="display: none;"></div>
+        
+        <table id="parties-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>NTN</th>
+                    <th>STRN</th>
+                    <th>Balance</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Parties will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        // API Base URL
+        const API_BASE = 'http://localhost:8080/New%20folder/ns/api';
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAccounts();
+            loadItems();
+            loadParties();
+            
+            // Set up event listeners
+            setupEventListeners();
+        });
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Account events
+            document.getElementById('create-account').addEventListener('click', createAccount);
+            document.getElementById('update-account').addEventListener('click', updateAccount);
+            document.getElementById('reset-account-form').addEventListener('click', resetAccountForm);
+            document.getElementById('refresh-accounts').addEventListener('click', loadAccounts);
+            
+            // Item events
+            document.getElementById('create-item').addEventListener('click', createItem);
+            document.getElementById('update-item').addEventListener('click', updateItem);
+            document.getElementById('reset-item-form').addEventListener('click', resetItemForm);
+            document.getElementById('refresh-items').addEventListener('click', loadItems);
+            
+            // Party events
+            document.getElementById('create-party').addEventListener('click', createParty);
+            document.getElementById('update-party').addEventListener('click', updateParty);
+            document.getElementById('reset-party-form').addEventListener('click', resetPartyForm);
+            document.getElementById('refresh-parties').addEventListener('click', loadParties);
+            
+            // Table row click events for editing
+            document.addEventListener('click', function(e) {
+                // Account edit
+                if (e.target.classList.contains('edit-account')) {
+                    const accountId = e.target.getAttribute('data-id');
+                    editAccount(accountId);
+                }
+                
+                // Account delete
+                if (e.target.classList.contains('delete-account')) {
+                    const accountId = e.target.getAttribute('data-id');
+                    deleteAccount(accountId);
+                }
+                
+                // Item edit
+                if (e.target.classList.contains('edit-item')) {
+                    const itemId = e.target.getAttribute('data-id');
+                    editItem(itemId);
+                }
+                
+                // Item delete
+                if (e.target.classList.contains('delete-item')) {
+                    const itemId = e.target.getAttribute('data-id');
+                    deleteItem(itemId);
+                }
+                
+                // Party edit
+                if (e.target.classList.contains('edit-party')) {
+                    const partyId = e.target.getAttribute('data-id');
+                    editParty(partyId);
+                }
+                
+                // Party delete
+                if (e.target.classList.contains('delete-party')) {
+                    const partyId = e.target.getAttribute('data-id');
+                    deleteParty(partyId);
+                }
+            });
+        }
+        
+        // Account CRUD Operations
+        function loadAccounts() {
+            fetch(`${API_BASE}/accounts.php`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.querySelector('#accounts-table tbody');
+                    tbody.innerHTML = '';
+                    
+                    data.forEach(account => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${account.id}</td>
+                            <td>${account.code}</td>
+                            <td>${account.name}</td>
+                            <td>${account.group_name}</td>
+                            <td>${account.type}</td>
+                            <td>₨${parseFloat(account.balance).toFixed(2)}</td>
+                            <td class="actions">
+                                <button class="action-btn edit-account" data-id="${account.id}">Edit</button>
+                                <button class="action-btn delete-account" data-id="${account.id}">Delete</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    showResult('account-result', `Error loading accounts: ${error.message}`, 'error');
+                });
+        }
+        
+        function createAccount() {
+            const accountData = {
+                code: document.getElementById('account-code').value,
+                name: document.getElementById('account-name').value,
+                group_id: document.getElementById('account-group').value,
+                type: document.getElementById('account-type').value,
+                balance: parseFloat(document.getElementById('account-balance').value) || 0.00
+            };
+            
+            fetch(`${API_BASE}/accounts.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(accountData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Failed to create account');
+                    });
+                }
+            })
+            .then(data => {
+                showResult('account-result', `Account created successfully with ID: ${data.id}`, 'success');
+                resetAccountForm();
+                loadAccounts();
+            })
+            .catch(error => {
+                showResult('account-result', `Error creating account: ${error.message}`, 'error');
+            });
+        }
+        
+        function editAccount(accountId) {
+            // Fetch account details
+            fetch(`${API_BASE}/accounts.php?id=${accountId}`)
+                .then(response => response.json())
+                .then(account => {
+                    document.getElementById('account-code').value = account.code;
+                    document.getElementById('account-name').value = account.name;
+                    document.getElementById('account-group').value = account.group_id;
+                    document.getElementById('account-type').value = account.type;
+                    document.getElementById('account-balance').value = account.balance;
+                    
+                    document.getElementById('update-account').disabled = false;
+                    document.getElementById('update-account').setAttribute('data-id', accountId);
+                    document.getElementById('create-account').disabled = true;
+                    
+                    showResult('account-result', `Editing account ID: ${accountId}`, 'info');
+                })
+                .catch(error => {
+                    showResult('account-result', `Error loading account: ${error.message}`, 'error');
+                });
+        }
+        
+        function updateAccount() {
+            const accountId = document.getElementById('update-account').getAttribute('data-id');
+            const accountData = {
+                code: document.getElementById('account-code').value,
+                name: document.getElementById('account-name').value,
+                group_id: document.getElementById('account-group').value,
+                type: document.getElementById('account-type').value,
+                balance: parseFloat(document.getElementById('account-balance').value) || 0.00
+            };
+            
+            fetch(`${API_BASE}/accounts.php?id=${accountId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(accountData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Failed to update account');
+                    });
+                }
+            })
+            .then(data => {
+                showResult('account-result', `Account updated successfully`, 'success');
+                resetAccountForm();
+                loadAccounts();
+            })
+            .catch(error => {
+                showResult('account-result', `Error updating account: ${error.message}`, 'error');
+            });
+        }
+        
+        function deleteAccount(accountId) {
+            if (confirm('Are you sure you want to delete this account?')) {
+                fetch(`${API_BASE}/accounts.php?id=${accountId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showResult('account-result', 'Account deleted successfully', 'success');
+                        loadAccounts();
+                    } else {
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Failed to delete account');
+                        });
+                    }
+                })
+                .catch(error => {
+                    showResult('account-result', `Error deleting account: ${error.message}`, 'error');
+                });
+            }
+        }
+        
+        function resetAccountForm() {
+            document.getElementById('account-code').value = '';
+            document.getElementById('account-name').value = '';
+            document.getElementById('account-group').value = '1';
+            document.getElementById('account-type').value = 'Customer';
+            document.getElementById('account-balance').value = '0.00';
+            
+            document.getElementById('update-account').disabled = true;
+            document.getElementById('update-account').removeAttribute('data-id');
+            document.getElementById('create-account').disabled = false;
+            
+            document.getElementById('account-result').style.display = 'none';
+        }
+        
+        // Item CRUD Operations
+        function loadItems() {
+            fetch(`${API_BASE}/items.php`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.querySelector('#items-table tbody');
+                    tbody.innerHTML = '';
+                    
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${item.id}</td>
+                            <td>${item.code}</td>
+                            <td>${item.name}</td>
+                            <td>${getCategoryName(item.category_id)}</td>
+                            <td>${item.unit}</td>
+                            <td>₨${parseFloat(item.price).toFixed(2)}</td>
+                            <td>${parseFloat(item.stock_quantity).toFixed(2)}</td>
+                            <td>${parseFloat(item.sales_tax_rate).toFixed(2)}%</td>
+                            <td class="actions">
+                                <button class="action-btn edit-item" data-id="${item.id}">Edit</button>
+                                <button class="action-btn delete-item" data-id="${item.id}">Delete</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    showResult('item-result', `Error loading items: ${error.message}`, 'error');
+                });
+        }
+        
+        function getCategoryName(categoryId) {
+            const categories = {
+                1: 'Acids',
+                2: 'Bases',
+                3: 'Solvents',
+                4: 'Fertilizers',
+                5: 'Industrial Chemicals'
+            };
+            return categories[categoryId] || 'Unknown';
+        }
+        
+        function createItem() {
+            const itemData = {
+                code: document.getElementById('item-code').value,
+                name: document.getElementById('item-name').value,
+                category_id: document.getElementById('item-category').value,
+                unit: document.getElementById('item-unit').value,
+                price: parseFloat(document.getElementById('item-price').value) || 0.00,
+                stock_quantity: parseFloat(document.getElementById('item-stock').value) || 0.00,
+                sales_tax_rate: parseFloat(document.getElementById('item-tax-rate').value) || 0.00
+            };
+            
+            fetch(`${API_BASE}/items.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(itemData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Failed to create item');
+                    });
+                }
+            })
+            .then(data => {
+                showResult('item-result', `Item created successfully with ID: ${data.id}`, 'success');
+                resetItemForm();
+                loadItems();
+            })
+            .catch(error => {
+                showResult('item-result', `Error creating item: ${error.message}`, 'error');
+            });
+        }
+        
+        function editItem(itemId) {
+            // Fetch item details
+            fetch(`${API_BASE}/items.php?id=${itemId}`)
+                .then(response => response.json())
+                .then(item => {
+                    document.getElementById('item-code').value = item.code;
+                    document.getElementById('item-name').value = item.name;
+                    document.getElementById('item-category').value = item.category_id;
+                    document.getElementById('item-unit').value = item.unit;
+                    document.getElementById('item-price').value = item.price;
+                    document.getElementById('item-stock').value = item.stock_quantity;
+                    document.getElementById('item-tax-rate').value = item.sales_tax_rate;
+                    
+                    document.getElementById('update-item').disabled = false;
+                    document.getElementById('update-item').setAttribute('data-id', itemId);
+                    document.getElementById('create-item').disabled = true;
+                    
+                    showResult('item-result', `Editing item ID: ${itemId}`, 'info');
+                })
+                .catch(error => {
+                    showResult('item-result', `Error loading item: ${error.message}`, 'error');
+                });
+        }
+        
+        function updateItem() {
+            const itemId = document.getElementById('update-item').getAttribute('data-id');
+            const itemData = {
+                code: document.getElementById('item-code').value,
+                name: document.getElementById('item-name').value,
+                category_id: document.getElementById('item-category').value,
+                unit: document.getElementById('item-unit').value,
+                price: parseFloat(document.getElementById('item-price').value) || 0.00,
+                stock_quantity: parseFloat(document.getElementById('item-stock').value) || 0.00,
+                sales_tax_rate: parseFloat(document.getElementById('item-tax-rate').value) || 0.00
+            };
+            
+            fetch(`${API_BASE}/items.php?id=${itemId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(itemData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Failed to update item');
+                    });
+                }
+            })
+            .then(data => {
+                showResult('item-result', `Item updated successfully`, 'success');
+                resetItemForm();
+                loadItems();
+            })
+            .catch(error => {
+                showResult('item-result', `Error updating item: ${error.message}`, 'error');
+            });
+        }
+        
+        function deleteItem(itemId) {
+            if (confirm('Are you sure you want to delete this item?')) {
+                fetch(`${API_BASE}/items.php?id=${itemId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showResult('item-result', 'Item deleted successfully', 'success');
+                        loadItems();
+                    } else {
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Failed to delete item');
+                        });
+                    }
+                })
+                .catch(error => {
+                    showResult('item-result', `Error deleting item: ${error.message}`, 'error');
+                });
+            }
+        }
+        
+        function resetItemForm() {
+            document.getElementById('item-code').value = '';
+            document.getElementById('item-name').value = '';
+            document.getElementById('item-category').value = '1';
+            document.getElementById('item-unit').value = '';
+            document.getElementById('item-price').value = '0.00';
+            document.getElementById('item-stock').value = '0.00';
+            document.getElementById('item-tax-rate').value = '0.00';
+            
+            document.getElementById('update-item').disabled = true;
+            document.getElementById('update-item').removeAttribute('data-id');
+            document.getElementById('create-item').disabled = false;
+            
+            document.getElementById('item-result').style.display = 'none';
+        }
+        
+        // Party CRUD Operations
+        function loadParties() {
+            fetch(`${API_BASE}/parties.php`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.querySelector('#parties-table tbody');
+                    tbody.innerHTML = '';
+                    
+                    data.forEach(party => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${party.id}</td>
+                            <td>${party.code}</td>
+                            <td>${party.name}</td>
+                            <td>${party.party_type}</td>
+                            <td>${party.ntn || 'N/A'}</td>
+                            <td>${party.strn || 'N/A'}</td>
+                            <td>₨${parseFloat(party.balance).toFixed(2)}</td>
+                            <td class="actions">
+                                <button class="action-btn edit-party" data-id="${party.id}">Edit</button>
+                                <button class="action-btn delete-party" data-id="${party.id}">Delete</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    showResult('party-result', `Error loading parties: ${error.message}`, 'error');
+                });
+        }
+        
+        function createParty() {
+            const partyData = {
+                code: document.getElementById('party-code').value,
+                name: document.getElementById('party-name').value,
+                party_type: document.getElementById('party-type').value,
+                address: document.getElementById('party-address').value,
+                city: document.getElementById('party-city').value,
+                phone: document.getElementById('party-phone').value,
+                email: document.getElementById('party-email').value,
+                ntn: document.getElementById('party-ntn').value,
+                strn: document.getElementById('party-strn').value,
+                balance: parseFloat(document.getElementById('party-balance').value) || 0.00
+            };
+            
+            fetch(`${API_BASE}/parties.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(partyData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Failed to create party');
+                    });
+                }
+            })
+            .then(data => {
+                showResult('party-result', `Party created successfully with ID: ${data.id}`, 'success');
+                resetPartyForm();
+                loadParties();
+            })
+            .catch(error => {
+                showResult('party-result', `Error creating party: ${error.message}`, 'error');
+            });
+        }
+        
+        function editParty(partyId) {
+            // Fetch party details
+            fetch(`${API_BASE}/parties.php?id=${partyId}`)
+                .then(response => response.json())
+                .then(party => {
+                    document.getElementById('party-code').value = party.code;
+                    document.getElementById('party-name').value = party.name;
+                    document.getElementById('party-type').value = party.party_type;
+                    document.getElementById('party-address').value = party.address || '';
+                    document.getElementById('party-city').value = party.city || '';
+                    document.getElementById('party-phone').value = party.phone || '';
+                    document.getElementById('party-email').value = party.email || '';
+                    document.getElementById('party-ntn').value = party.ntn || '';
+                    document.getElementById('party-strn').value = party.strn || '';
+                    document.getElementById('party-balance').value = party.balance;
+                    
+                    document.getElementById('update-party').disabled = false;
+                    document.getElementById('update-party').setAttribute('data-id', partyId);
+                    document.getElementById('create-party').disabled = true;
+                    
+                    showResult('party-result', `Editing party ID: ${partyId}`, 'info');
+                })
+                .catch(error => {
+                    showResult('party-result', `Error loading party: ${error.message}`, 'error');
+                });
+        }
+        
+        function updateParty() {
+            const partyId = document.getElementById('update-party').getAttribute('data-id');
+            const partyData = {
+                code: document.getElementById('party-code').value,
+                name: document.getElementById('party-name').value,
+                party_type: document.getElementById('party-type').value,
+                address: document.getElementById('party-address').value,
+                city: document.getElementById('party-city').value,
+                phone: document.getElementById('party-phone').value,
+                email: document.getElementById('party-email').value,
+                ntn: document.getElementById('party-ntn').value,
+                strn: document.getElementById('party-strn').value,
+                balance: parseFloat(document.getElementById('party-balance').value) || 0.00
+            };
+            
+            fetch(`${API_BASE}/parties.php?id=${partyId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(partyData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Failed to update party');
+                    });
+                }
+            })
+            .then(data => {
+                showResult('party-result', `Party updated successfully`, 'success');
+                resetPartyForm();
+                loadParties();
+            })
+            .catch(error => {
+                showResult('party-result', `Error updating party: ${error.message}`, 'error');
+            });
+        }
+        
+        function deleteParty(partyId) {
+            if (confirm('Are you sure you want to delete this party?')) {
+                fetch(`${API_BASE}/parties.php?id=${partyId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showResult('party-result', 'Party deleted successfully', 'success');
+                        loadParties();
+                    } else {
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Failed to delete party');
+                        });
+                    }
+                })
+                .catch(error => {
+                    showResult('party-result', `Error deleting party: ${error.message}`, 'error');
+                });
+            }
+        }
+        
+        function resetPartyForm() {
+            document.getElementById('party-code').value = '';
+            document.getElementById('party-name').value = '';
+            document.getElementById('party-type').value = 'Customer';
+            document.getElementById('party-address').value = '';
+            document.getElementById('party-city').value = '';
+            document.getElementById('party-phone').value = '';
+            document.getElementById('party-email').value = '';
+            document.getElementById('party-ntn').value = '';
+            document.getElementById('party-strn').value = '';
+            document.getElementById('party-balance').value = '0.00';
+            
+            document.getElementById('update-party').disabled = true;
+            document.getElementById('update-party').removeAttribute('data-id');
+            document.getElementById('create-party').disabled = false;
+            
+            document.getElementById('party-result').style.display = 'none';
+        }
+        
+        // Utility function to show results
+        function showResult(elementId, message, type) {
+            const resultElement = document.getElementById(elementId);
+            resultElement.textContent = message;
+            resultElement.className = `test-result ${type}`;
+            resultElement.style.display = 'block';
+            
+            // Auto-hide success messages after 3 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    resultElement.style.display = 'none';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
