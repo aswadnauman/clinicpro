@@ -44,50 +44,55 @@ switch($method) {
 
 function handleGet($conn) {
     $id = isset($_GET['id']) ? intval($_GET['id']) : null;
-    
+
     if ($id) {
-        $stmt = $conn->prepare("SELECT a.*, ag.name as group_name, ag.type as group_type FROM accounts a JOIN account_groups ag ON a.group_id = ag.id WHERE a.id = ? AND a.deleted = 0");
+        $stmt = $conn->prepare("
+            SELECT a.*, ag.name as group_name, ag.type as group_type,
+                   (SELECT SUM(CASE WHEN td.type = 'Debit' THEN td.amount ELSE -td.amount END)
+                    FROM transaction_details td
+                    WHERE td.account_id = a.id) as balance
+            FROM accounts a
+            JOIN account_groups ag ON a.group_id = ag.id
+            WHERE a.id = ? AND a.deleted = 0
+        ");
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         if ($result->num_rows > 0) {
-            echo json_encode(["success" => true, "data" => $result->fetch_assoc()]);
+            $account = $result->fetch_assoc();
+            $account['balance'] = $account['balance'] ?? 0.00;
+            echo json_encode(["success" => true, "data" => $account]);
         } else {
             http_response_code(404);
             echo json_encode(["success" => false, "message" => "Account not found"]);
         }
     } else {
-        // Dashboard-friendly parameters
         $search = isset($_GET['search']) ? $_GET['search'] : '';
         $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
         $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
         $offset = ($page - 1) * $limit;
-        
-        // Sorting parameters
         $sort_by = isset($_GET['sortBy']) ? $_GET['sortBy'] : 'a.code';
         $sort_dir = isset($_GET['sortDir']) ? strtoupper($_GET['sortDir']) : 'ASC';
-        
-        // Validate sort direction
         $sort_dir = ($sort_dir === 'ASC') ? 'ASC' : 'DESC';
 
-        $query = "SELECT a.*, ag.name as group_name, ag.type as group_type 
-                  FROM accounts a 
-                  JOIN account_groups ag ON a.group_id = ag.id 
-                  WHERE a.deleted = 0";
-                  
-        $countQuery = "SELECT COUNT(*) as total 
-                      FROM accounts a 
-                      JOIN account_groups ag ON a.group_id = ag.id 
-                      WHERE a.deleted = 0";
-        
+        $query = "
+            SELECT a.*, ag.name as group_name, ag.type as group_type,
+                   (SELECT SUM(CASE WHEN td.type = 'Debit' THEN td.amount ELSE -td.amount END)
+                    FROM transaction_details td
+                    WHERE td.account_id = a.id) as balance
+            FROM accounts a
+            JOIN account_groups ag ON a.group_id = ag.id
+            WHERE a.deleted = 0
+        ";
+        $countQuery = "SELECT COUNT(*) as total FROM accounts a JOIN account_groups ag ON a.group_id = ag.id WHERE a.deleted = 0";
+
         if ($search) {
             $search_param = "%{$search}%";
             $query .= " AND (a.name LIKE ? OR a.code LIKE ? OR ag.name LIKE ?)";
             $countQuery .= " AND (a.name LIKE ? OR a.code LIKE ? OR ag.name LIKE ?)";
         }
-        
-        // Add sorting
+
         $query .= " ORDER BY {$sort_by} {$sort_dir} LIMIT ? OFFSET ?";
         
         $stmt = $conn->prepare($query);
@@ -103,6 +108,10 @@ function handleGet($conn) {
         $stmt->execute();
         $result = $stmt->get_result();
         $accounts = $result->fetch_all(MYSQLI_ASSOC);
+
+        foreach($accounts as &$account) {
+            $account['balance'] = $account['balance'] ?? 0.00;
+        }
 
         $countStmt->execute();
         $totalResult = $countStmt->get_result()->fetch_assoc();
@@ -159,7 +168,7 @@ function handleGetLedger($conn) {
     $result = $stmt->get_result();
     
     $transactions = array();
-    $running_balance = floatval($account['balance']); // Start with opening balance
+    $running_balance = 0.00;
     
     while($row = $result->fetch_assoc()) {
         if ($row['type'] == 'Debit') {
@@ -171,6 +180,8 @@ function handleGetLedger($conn) {
         $transactions[] = $row;
     }
     
+    $account['balance'] = $running_balance;
+
     echo json_encode([
         "success" => true,
         "account" => $account,
@@ -197,8 +208,8 @@ function handlePost($conn) {
 
     $conn->begin_transaction();
     try {
-        $stmt = $conn->prepare("INSERT INTO accounts (code, name, group_id, type, balance) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssisd", $data['code'], $data['name'], $data['group_id'], $data['type'], $data['balance']);
+        $stmt = $conn->prepare("INSERT INTO accounts (code, name, group_id, type) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssis", $data['code'], $data['name'], $data['group_id'], $data['type']);
         $stmt->execute();
 
         $id = $conn->insert_id;
@@ -208,6 +219,7 @@ function handlePost($conn) {
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $account = $stmt->get_result()->fetch_assoc();
+        $account['balance'] = 0.00;
 
         http_response_code(201);
         echo json_encode(["success" => true, "message" => "Account created successfully", "data" => $account]);
@@ -243,8 +255,8 @@ function handlePut($conn) {
 
     $conn->begin_transaction();
     try {
-        $stmt = $conn->prepare("UPDATE accounts SET code = ?, name = ?, group_id = ?, type = ?, balance = ? WHERE id = ? AND deleted = 0");
-        $stmt->bind_param("ssisdi", $data['code'], $data['name'], $data['group_id'], $data['type'], $data['balance'], $id);
+        $stmt = $conn->prepare("UPDATE accounts SET code = ?, name = ?, group_id = ?, type = ? WHERE id = ? AND deleted = 0");
+        $stmt->bind_param("ssisi", $data['code'], $data['name'], $data['group_id'], $data['type'], $id);
         $stmt->execute();
 
         if ($stmt->affected_rows === 0) {
@@ -256,10 +268,19 @@ function handlePut($conn) {
         
         $conn->commit();
 
-        $stmt = $conn->prepare("SELECT a.*, ag.name as group_name, ag.type as group_type FROM accounts a JOIN account_groups ag ON a.group_id = ag.id WHERE a.id = ?");
+        $stmt = $conn->prepare("
+            SELECT a.*, ag.name as group_name, ag.type as group_type,
+                   (SELECT SUM(CASE WHEN td.type = 'Debit' THEN td.amount ELSE -td.amount END)
+                    FROM transaction_details td
+                    WHERE td.account_id = a.id) as balance
+            FROM accounts a
+            JOIN account_groups ag ON a.group_id = ag.id
+            WHERE a.id = ?
+        ");
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $account = $stmt->get_result()->fetch_assoc();
+        $account['balance'] = $account['balance'] ?? 0.00;
 
         echo json_encode(["success" => true, "message" => "Account updated successfully", "data" => $account]);
 
@@ -349,10 +370,6 @@ function validateAccountData($conn, $data, $id = null) {
     
     if (empty($data['type'])) {
         $errors['type'] = 'Account type is required';
-    }
-
-    if (!isset($data['balance']) || !is_numeric($data['balance'])) {
-        $errors['balance'] = 'Balance must be a number';
     }
 
     return $errors;

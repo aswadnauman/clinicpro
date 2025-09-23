@@ -263,10 +263,6 @@
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label for="account-balance">Opening Balance</label>
-                    <input type="number" id="account-balance" step="0.01" value="0.00">
-                </div>
                 
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary" id="save-btn">
@@ -513,7 +509,6 @@
             const name = document.getElementById('account-name').value;
             const groupId = document.getElementById('account-group').value;
             const type = document.getElementById('account-type').value;
-            const balance = document.getElementById('account-balance').value || 0;
             
             // Validate required fields
             if (!code || !name || !groupId || !type) {
@@ -526,7 +521,6 @@
                 name,
                 group_id: parseInt(groupId),
                 type,
-                balance: parseFloat(balance)
             };
             
             try {
@@ -578,7 +572,6 @@
                     document.getElementById('account-name').value = account.name;
                     document.getElementById('account-group').value = account.group_id;
                     document.getElementById('account-type').value = account.type;
-                    document.getElementById('account-balance').value = account.balance;
                     
                     document.getElementById('form-title').textContent = 'Edit Account';
                     document.getElementById('save-btn').innerHTML = '<i class="fas fa-save"></i> Update Account';
