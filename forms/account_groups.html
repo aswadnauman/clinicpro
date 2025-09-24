@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Groups</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .form-container { max-width: 900px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 5px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn:hover { opacity: 0.9; }
+        .search-container { margin-bottom: 20px; display: flex; gap: 10px; }
+        .search-container input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; }
+        tr:hover { background-color: #f1f1f1; }
+        .actions { display: flex; gap: 5px; }
+        .action-btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
+        .edit-btn { background: #ffc107; color: black; }
+        .delete-btn { background: #dc3545; color: white; }
+        .error-message { color: #dc3545; font-size: 12px; margin-top: 4px; }
+        .pagination { margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .pagination button { padding: 8px 12px; border: 1px solid #ddd; background: white; cursor: pointer; }
+        .pagination button.active { background: #007bff; color: white; }
+        .pagination button:disabled { cursor: not-allowed; opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-layer-group"></i> Account Groups</h1>
+        
+        <div class="form-container">
+            <h2 id="form-title">Add New Account Group</h2>
+            <form id="account-group-form">
+                <input type="hidden" id="account-group-id">
+                <div class="form-group">
+                    <label for="account-group-name">Group Name</label>
+                    <input type="text" id="account-group-name" required>
+                    <div class="error-message" id="error-name"></div>
+                </div>
+                <div class="form-group">
+                    <label for="account-group-type">Group Type</label>
+                    <select id="account-group-type" required>
+                        <option value="">Select Type</option>
+                        <option value="Asset">Asset</option>
+                        <option value="Liability">Liability</option>
+                        <option value="Equity">Equity</option>
+                        <option value="Revenue">Revenue</option>
+                        <option value="Expense">Expense</option>
+                    </select>
+                    <div class="error-message" id="error-type"></div>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" id="save-btn" class="btn btn-primary"><i class="fas fa-save"></i> Save Group</button>
+                    <button type="button" id="cancel-btn" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="form-container">
+            <h2>Account Group List</h2>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search by name...">
+                <button id="search-btn" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
+            </div>
+            <table id="account-groups-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div id="pagination-container" class="pagination"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '../api';
+        let currentPage = 1;
+        let currentSearch = '';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const accountGroupId = urlParams.get('id');
+            if (accountGroupId) {
+                editAccountGroup(accountGroupId);
+            }
+
+            loadAccountGroups();
+
+            document.getElementById('account-group-form').addEventListener('submit', saveAccountGroup);
+            document.getElementById('cancel-btn').addEventListener('click', resetForm);
+            document.getElementById('search-btn').addEventListener('click', () => {
+                currentSearch = document.getElementById('search-input').value;
+                currentPage = 1;
+                loadAccountGroups();
+            });
+        });
+
+        function loadAccountGroups() {
+            const url = new URL(`${API_BASE}/account_groups.php`);
+            url.searchParams.append('page', currentPage);
+            url.searchParams.append('limit', 10);
+            if (currentSearch) {
+                url.searchParams.append('search', currentSearch);
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(response => {
+                    const tbody = document.querySelector('#account-groups-table tbody');
+                    tbody.innerHTML = '';
+                    if(response.data) {
+                        response.data.forEach(group => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${group.name}</td>
+                                <td>${group.type}</td>
+                                <td class="actions">
+                                    <button class="action-btn edit-btn" data-id="${group.id}"><i class="fas fa-edit"></i></button>
+                                    <button class="action-btn delete-btn" data-id="${group.id}"><i class="fas fa-trash"></i></button>
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    }
+
+                    document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => editAccountGroup(btn.dataset.id)));
+                    document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => deleteAccountGroup(btn.dataset.id)));
+                    
+                    setupPagination(response.pagination);
+                })
+                .catch(error => showNotification('Error loading account groups: ' + error.message, 'error'));
+        }
+
+        function setupPagination(pagination) {
+            if (!pagination || pagination.totalPages <= 1) {
+                document.getElementById('pagination-container').innerHTML = '';
+                return;
+            }
+
+            let buttons = '';
+            for (let i = 1; i <= pagination.totalPages; i++) {
+                buttons += `<button class="${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+            document.getElementById('pagination-container').innerHTML = buttons;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            loadAccountGroups();
+        }
+
+        function saveAccountGroup(e) {
+            e.preventDefault();
+            clearErrors();
+
+            const accountGroupId = document.getElementById('account-group-id').value;
+            const accountGroupData = {
+                name: document.getElementById('account-group-name').value,
+                type: document.getElementById('account-group-type').value
+            };
+
+            const method = accountGroupId ? 'PUT' : 'POST';
+            const url = accountGroupId ? `${API_BASE}/account_groups.php?id=${accountGroupId}` : `${API_BASE}/account_groups.php`;
+
+            fetch(url, { 
+                method: method, 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(accountGroupData) 
+            })
+            .then(handleApiResponse)
+            .then(response => {
+                showNotification(response.message, 'success');
+                resetForm();
+                loadAccountGroups();
+            })
+            .catch(error => {
+                showNotification(error.message || 'An error occurred', 'error');
+                if (error.errors) {
+                    displayErrors(error.errors);
+                }
+            });
+        }
+
+        function editAccountGroup(id) {
+            fetch(`${API_BASE}/account_groups.php?id=${id}`)
+                .then(response => response.json())
+                .then(response => {
+                    if (response.success) {
+                        const group = response.data;
+                        document.getElementById('account-group-id').value = group.id;
+                        document.getElementById('account-group-name').value = group.name;
+                        document.getElementById('account-group-type').value = group.type;
+                        
+                        document.getElementById('form-title').textContent = 'Edit Account Group';
+                        document.getElementById('save-btn').innerHTML = '<i class="fas fa-save"></i> Update Group';
+                        window.scrollTo(0, 0);
+                    } else {
+                        showNotification(response.message, 'error');
+                    }
+                }).catch(err => showNotification('Error fetching account group details', 'error'));
+        }
+
+        function deleteAccountGroup(id) {
+            if (confirm('Are you sure you want to delete this account group?')) {
+                fetch(`${API_BASE}/account_groups.php?id=${id}`, { method: 'DELETE' })
+                .then(handleApiResponse)
+                .then(response => {
+                    showNotification(response.message, 'success');
+                    loadAccountGroups();
+                })
+                .catch(error => showNotification(error.message, 'error'));
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('account-group-form').reset();
+            document.getElementById('account-group-id').value = '';
+            document.getElementById('form-title').textContent = 'Add New Account Group';
+            document.getElementById('save-btn').innerHTML = '<i class="fas fa-save"></i> Save Group';
+            clearErrors();
+        }
+
+        function handleApiResponse(response) {
+            return response.json().then(data => {
+                if (!response.ok) {
+                    const error = new Error(data.message || 'Server error');
+                    error.errors = data.errors;
+                    throw error;
+                }
+                return data;
+            });
+        }
+
+        function displayErrors(errors) {
+            for (const key in errors) {
+                const errorElement = document.getElementById(`error-${key}`);
+                if (errorElement) {
+                    errorElement.textContent = errors[key];
+                }
+            }
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+        }
+
+        function showNotification(message, type) {
+            let notification = document.getElementById('notification');
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = 'notification';
+                notification.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 15px; border-radius: 4px; color: white; font-weight: bold; z-index: 1000; display: none; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+                document.body.appendChild(notification);
+            }
+            notification.textContent = message;
+            notification.style.backgroundColor = type === 'success' ? '#28a745' : '#dc3545';
+            notification.style.display = 'block';
+            setTimeout(() => { notification.style.display = 'none'; }, 3000);
+        }
+    </script>
+</body>
+</html>

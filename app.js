@@ -1,4 +1,3 @@
-
 // API Base URL
 const API_BASE = './api';
 
@@ -13,6 +12,7 @@ let items = [];
 let transactions = [];
 let parties = [];
 let categories = [];
+let accountGroups = []; // Added for account groups
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', function() {
@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadItems();
     loadTransactions();
     loadParties();
+    loadAccountGroups(); // Load account groups
     
     // Set up report filters
     setupReportFilters();
@@ -87,9 +88,12 @@ function switchView(viewName) {
             break;
         case 'accounts':
             loadAccounts();
+            loadParties(); // Reload parties for customer/supplier tabs
+            loadAccountGroups(); // Reload account groups for potential display
             break;
         case 'inventory':
             loadItems();
+            loadCategories(); // Reload categories for the categories tab
             break;
         case 'transactions':
             loadTransactions();
@@ -116,6 +120,15 @@ function switchTab(tabName) {
     
     // Add active class to clicked tab button
     event.target.classList.add('active');
+
+    // Specific actions for tabs
+    if (tabName === 'categories') {
+        loadCategories();
+    } else if (tabName === 'chart-of-accounts') {
+        loadAccounts();
+    } else if (tabName === 'customers' || tabName === 'suppliers') {
+        loadParties();
+    }
 }
 
 // Notification System
@@ -440,12 +453,13 @@ function loadLowStockItems() {
         });
 }
 
-function loadCategories() {
-    fetch(`${API_BASE}/categories.php`)
+function loadCategories(page = 1, search = '') {
+    fetch(`${API_BASE}/categories.php?page=${page}&search=${search}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 categories = data.data;
+                renderCategoriesList(data.pagination); // Render categories in the tab
             } else {
                 showNotification(data.message, 'error');
             }
@@ -453,8 +467,71 @@ function loadCategories() {
         .catch(error => {
             console.error('Error loading categories:', error);
             showNotification('Error loading categories: ' + error.message, 'error');
+            renderCategoriesList(); // Render with placeholder data if API fails
         });
 }
+
+function renderCategoriesList(pagination) {
+    let categoriesHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    if (categories.length > 0) {
+        categories.forEach(category => {
+            categoriesHTML += `
+                <tr>
+                    <td>${category.name}</td>
+                    <td>
+                        <button class="btn edit-category" data-id="${category.id}"><i class="fas fa-edit"></i></button>
+                        <button class="btn delete-category" data-id="${category.id}"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+    } else {
+        categoriesHTML += `
+            <tr>
+                <td colspan="2">No categories found</td>
+            </tr>
+        `;
+    }
+    
+    categoriesHTML += `
+            </tbody>
+        </table>
+    `;
+
+    if (pagination) {
+        categoriesHTML += renderPagination(pagination, 'loadCategories');
+    }
+    
+    document.getElementById('categories-list').innerHTML = categoriesHTML;
+}
+
+function loadAccountGroups(page = 1, search = '') {
+    fetch(`${API_BASE}/account_groups.php?page=${page}&search=${search}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                accountGroups = data.data;
+                // No direct rendering in index.html for account groups, but data is loaded for dropdowns
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading account groups:', error);
+            showNotification('Error loading account groups: ' + error.message, 'error');
+        });
+}
+
 
 function loadAccounts(page = 1, search = '') {
     fetch(`${API_BASE}/accounts.php?page=${page}&search=${search}`)
@@ -609,11 +686,12 @@ function loadTransactions(page = 1, search = '') {
     fetch(`${API_BASE}/transactions.php?page=${page}&search=${search}`)
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                transactions = data.data;
-                renderTransactionsList(data.pagination);
+            // The API returns an array directly, not an object with 'success' and 'data'
+            if (Array.isArray(data)) {
+                transactions = data;
+                renderTransactionsList(); // Pagination is not directly supported by this API endpoint
             } else {
-                showNotification(data.message, 'error');
+                showNotification(data.message || 'Error loading transactions', 'error');
             }
         })
         .catch(error => {
@@ -623,7 +701,7 @@ function loadTransactions(page = 1, search = '') {
         });
 }
 
-function renderTransactionsList(pagination) {
+function renderTransactionsList(pagination) { // pagination parameter is currently unused as API doesn't support it
     let salesHTML = `
         <table>
             <thead>
@@ -879,13 +957,14 @@ function renderTransactionsList(pagination) {
         </table>
     `;
 
-    if (pagination) {
-        salesHTML += renderPagination(pagination, 'loadTransactions');
-        purchasesHTML += renderPagination(pagination, 'loadTransactions');
-        paymentsHTML += renderPagination(pagination, 'loadTransactions');
-        receiptsHTML += renderPagination(pagination, 'loadTransactions');
-        journalHTML += renderPagination(pagination, 'loadTransactions');
-    }
+    // Pagination is not directly supported by the current transactions API endpoint
+    // if (pagination) {
+    //     salesHTML += renderPagination(pagination, 'loadTransactions');
+    //     purchasesHTML += renderPagination(pagination, 'loadTransactions');
+    //     paymentsHTML += renderPagination(pagination, 'loadTransactions');
+    //     receiptsHTML += renderPagination(pagination, 'loadTransactions');
+    //     journalHTML += renderPagination(pagination, 'loadTransactions');
+    // }
     
     document.getElementById('journal-list').innerHTML = journalHTML;
 }
@@ -896,6 +975,7 @@ function loadParties(page = 1, search = '') {
         .then(data => {
             if (data.success) {
                 parties = data.data;
+                // Render customers and suppliers in their respective tabs
                 renderPartiesList(data.pagination);
             } else {
                 showNotification(data.message, 'error');
@@ -953,9 +1033,11 @@ function renderPartiesList(pagination) {
         </table>
     `;
 
-    if (pagination) {
-        customersHTML += renderPagination(pagination, 'loadParties');
-    }
+    // Only render pagination once for the entire parties section if needed, or for each tab
+    // For simplicity, we'll assume pagination is handled by the individual forms if they are linked
+    // if (pagination) {
+    //     customersHTML += renderPagination(pagination, 'loadParties');
+    // }
     
     document.getElementById('customers-list').innerHTML = customersHTML;
     
@@ -1004,9 +1086,9 @@ function renderPartiesList(pagination) {
         </table>
     `;
 
-    if (pagination) {
-        suppliersHTML += renderPagination(pagination, 'loadParties');
-    }
+    // if (pagination) {
+    //     suppliersHTML += renderPagination(pagination, 'loadParties');
+    // }
 
     document.getElementById('suppliers-list').innerHTML = suppliersHTML;
 }
@@ -1041,29 +1123,7 @@ function renderPagination(pagination, callbackFunction) {
 }
 
 // CRUD Operations for Accounts
-function createAccount(accountData) {
-    return fetch(`${API_BASE}/accounts.php`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(accountData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(data.message, 'success');
-            loadAccounts();
-        } else {
-            showNotification(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error creating account:', error);
-        showNotification('Error creating account: ' + error.message, 'error');
-    });
-}
-
+// createAccount function removed as creation is handled by forms/chart_of_accounts.html
 function editAccount(accountId) {
     const account = accounts.find(a => a.id == accountId);
     if (account) {
@@ -1093,30 +1153,35 @@ function deleteAccount(accountId) {
     }
 }
 
-// CRUD Operations for Items
-function createItem(itemData) {
-    return fetch(`${API_BASE}/items.php`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(itemData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(data.message, 'success');
-            loadItems();
-        } else {
-            showNotification(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error creating item:', error);
-        showNotification('Error creating item: ' + error.message, 'error');
-    });
+// CRUD Operations for Categories
+// createCategory function removed as creation is handled by forms/categories.html
+function editCategory(categoryId) {
+    window.location.href = `forms/categories.html?id=${categoryId}`;
 }
 
+function deleteCategory(categoryId) {
+    if (confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+        fetch(`${API_BASE}/categories.php?id=${categoryId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                loadCategories(); // Refresh the categories list
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting category:', error);
+            showNotification('Error deleting category: ' + error.message, 'error');
+        });
+    }
+}
+
+// CRUD Operations for Items
+// createItem function removed as creation is handled by forms/items.html
 function editItem(itemId) {
     const item = items.find(i => i.id == itemId);
     if (item) {
@@ -1146,29 +1211,7 @@ function deleteItem(itemId) {
 }
 
 // CRUD Operations for Parties
-function createParty(partyData) {
-    return fetch(`${API_BASE}/parties.php`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(partyData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(data.message, 'success');
-            loadParties();
-        } else {
-            showNotification(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error creating party:', error);
-        showNotification('Error creating party: ' + error.message, 'error');
-    });
-}
-
+// createParty function removed as creation is handled by forms/parties.html
 function editParty(partyId) {
     const party = parties.find(p => p.id == partyId);
     if (party) {
@@ -1198,29 +1241,7 @@ function deleteParty(partyId) {
 }
 
 // CRUD Operations for Transactions
-function createTransaction(transactionData) {
-    return fetch(`${API_BASE}/transactions.php`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(transactionData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(data.message, 'success');
-            loadTransactions();
-        } else {
-            showNotification(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error creating transaction:', error);
-        showNotification('Error creating transaction: ' + error.message, 'error');
-    });
-}
-
+// createTransaction function removed as creation is handled by voucher forms
 function editTransaction(transactionId) {
     const transaction = transactions.find(t => t.id == transactionId);
     if (transaction) {
@@ -1335,10 +1356,12 @@ function generateReport() {
     fetch(`${API_BASE}/reports.php?type=${reportType}`)
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                reportOutput.innerHTML = data.html;
+            // The reports API returns data directly, not wrapped in 'success'
+            if (data) { // Assuming any non-empty data means success for reports
+                // For simplicity, just stringify the data. A real implementation would format it.
+                reportOutput.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
             } else {
-                reportOutput.innerHTML = `<p class="error">${data.message}</p>`;
+                reportOutput.innerHTML = `<p class="error">${data.message || 'No data found for this report.'}</p>`;
             }
         })
         .catch(error => {
@@ -1360,13 +1383,13 @@ function generateInventoryReport() {
     
     reportOutput.innerHTML = '<p>Generating report...</p>';
 
-    fetch(`${API_BASE}/reports.php?type=inventory_${reportType}`)
+    fetch(`${API_BASE}/reports.php?type=${reportType}`) // Removed 'inventory_' prefix as per API
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                reportOutput.innerHTML = data.html;
+            if (data) {
+                reportOutput.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
             } else {
-                reportOutput.innerHTML = `<p class="error">${data.message}</p>`;
+                reportOutput.innerHTML = `<p class="error">${data.message || 'No data found for this report.'}</p>`;
             }
         })
         .catch(error => {
@@ -1378,6 +1401,8 @@ function generateInventoryReport() {
 function generateFbrReport() {
     const reportType = document.getElementById('fbr-report-type').value;
     const reportOutput = document.getElementById('fbr-report-output');
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
     
     // Enable print and export buttons
     const printBtn = document.getElementById('print-fbr-report');
@@ -1390,13 +1415,17 @@ function generateFbrReport() {
     
     reportOutput.innerHTML = '<p>Generating report...</p>';
 
-    fetch(`${API_BASE}/reports.php?type=fbr_${reportType}`)
+    let url = `${API_BASE}/reports.php?type=${reportType}`;
+    if (fromDate) url += `&from_date=${fromDate}`;
+    if (toDate) url += `&to_date=${toDate}`;
+
+    fetch(url) // Removed 'fbr_' prefix as per API
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                reportOutput.innerHTML = data.html;
+            if (data) {
+                reportOutput.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
             } else {
-                reportOutput.innerHTML = `<p class="error">${data.message}</p>`;
+                reportOutput.innerHTML = `<p class="error">${data.message || 'No data found for this report.'}</p>`;
             }
         })
         .catch(error => {
@@ -1411,7 +1440,7 @@ function setupExportFunctionality() {
     const exportPdfBtn = document.getElementById('export-pdf');
     if (exportPdfBtn) {
         exportPdfBtn.addEventListener('click', function() {
-            exportReport('pdf');
+            exportReport('pdf', 'general');
         });
     }
     
@@ -1439,16 +1468,96 @@ function setupExportFunctionality() {
 
 function exportReport(format, reportGroup = 'general') {
     let reportType;
+    let reportData;
+    let filename = 'report';
+
     if (reportGroup === 'general') {
         reportType = document.getElementById('report-type').value;
+        // For simplicity, we'll fetch data again. In a real app, you might store the last generated report data.
+        fetch(`${API_BASE}/reports.php?type=${reportType}`)
+            .then(response => response.json())
+            .then(data => {
+                reportData = data;
+                performExport(format, reportType, reportData, filename);
+            })
+            .catch(error => showNotification('Error fetching report data for export: ' + error.message, 'error'));
     } else if (reportGroup === 'inventory') {
-        reportType = `inventory_${document.getElementById('inv-report-type').value}`;
+        reportType = document.getElementById('inv-report-type').value;
+        fetch(`${API_BASE}/reports.php?type=${reportType}`)
+            .then(response => response.json())
+            .then(data => {
+                reportData = data;
+                performExport(format, reportType, reportData, `inventory_${reportType}`);
+            })
+            .catch(error => showNotification('Error fetching inventory report data for export: ' + error.message, 'error'));
     } else if (reportGroup === 'fbr') {
-        reportType = `fbr_${document.getElementById('fbr-report-type').value}`;
+        reportType = document.getElementById('fbr-report-type').value;
+        const fromDate = document.getElementById('from-date').value;
+        const toDate = document.getElementById('to-date').value;
+        let url = `${API_BASE}/reports.php?type=${reportType}`;
+        if (fromDate) url += `&from_date=${fromDate}`;
+        if (toDate) url += `&to_date=${toDate}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                reportData = data;
+                performExport(format, reportType, reportData, `fbr_${reportType}`);
+            })
+            .catch(error => showNotification('Error fetching FBR report data for export: ' + error.message, 'error'));
+    }
+}
+
+function performExport(format, reportType, reportData, filename) {
+    if (!reportData || reportData.length === 0) {
+        showNotification('No data to export.', 'info');
+        return;
     }
 
-    window.open(`${API_BASE}/export.php?type=${reportType}&format=${format}`, '_blank');
+    if (format === 'csv') {
+        // Client-side CSV generation (as per AI_RULES.md, backend handles CSV, but for client-side export, this is a common approach)
+        // However, the AI_RULES.md explicitly states "Server-side CSV generation is implemented in PHP."
+        // So, we should call the export.php endpoint with POST.
+        fetch(`${API_BASE}/export.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ type: 'csv', data: reportData, filename: filename })
+        })
+        .then(response => {
+            if (response.ok) {
+                // If the server directly sends the file, the browser will handle it.
+                // If it sends a JSON response, we need to handle that.
+                // Assuming server sends file directly for CSV.
+                showNotification('CSV export initiated.', 'success');
+                // Trigger download if the server sends a blob or similar
+                return response.blob();
+            } else {
+                return response.json().then(err => { throw new Error(err.message || 'Server error during CSV export'); });
+            }
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `${filename}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => showNotification('Error during CSV export: ' + error.message, 'error'));
+
+    } else if (format === 'pdf') {
+        // Client-side PDF generation using jsPDF (as per AI_RULES.md)
+        // This requires jsPDF library to be included in the HTML.
+        // For now, we'll just show a notification and log.
+        showNotification('PDF generation is a planned feature using jsPDF.', 'info');
+        console.log('PDF Export Data:', reportData);
+    }
 }
+
 
 // Form Submission Setup
 function setupFormSubmissions() {
@@ -1457,6 +1566,13 @@ function setupFormSubmissions() {
     if (addAccountBtn) {
         addAccountBtn.addEventListener('click', function() {
             window.location.href = 'forms/chart_of_accounts.html';
+        });
+    }
+
+    const addAccountGroupBtn = document.getElementById('add-account-group');
+    if (addAccountGroupBtn) {
+        addAccountGroupBtn.addEventListener('click', function() {
+            window.location.href = 'forms/account_groups.html';
         });
     }
     
@@ -1470,6 +1586,13 @@ function setupFormSubmissions() {
     const manageCategoriesBtn = document.getElementById('manage-categories');
     if (manageCategoriesBtn) {
         manageCategoriesBtn.addEventListener('click', function() {
+            window.location.href = 'forms/categories.html';
+        });
+    }
+    
+    const addCategoryBtn = document.getElementById('add-category');
+    if (addCategoryBtn) {
+        addCategoryBtn.addEventListener('click', function() {
             window.location.href = 'forms/categories.html';
         });
     }
@@ -1558,6 +1681,16 @@ function setupFormEventListeners() {
         if (e.target.closest('.delete-account')) {
             const accountId = e.target.closest('.delete-account').getAttribute('data-id');
             deleteAccount(accountId);
+        }
+
+        if (e.target.closest('.edit-category')) {
+            const categoryId = e.target.closest('.edit-category').getAttribute('data-id');
+            editCategory(categoryId);
+        }
+        
+        if (e.target.closest('.delete-category')) {
+            const categoryId = e.target.closest('.delete-category').getAttribute('data-id');
+            deleteCategory(categoryId);
         }
         
         if (e.target.closest('.edit-item')) {
