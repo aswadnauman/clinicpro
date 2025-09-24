@@ -74,11 +74,11 @@ Features:
 
 All forms are now properly integrated with the main application through RESTful API endpoints:
 
-- **Parties API**: [api/parties.php](file://c:\xampp\htdocs\New%20folder\ns\api\parties.php) - Handles customers and suppliers with NTN/STRN
-- **Items API**: [api/items.php](file://c:\xampp\htdocs\New%20folder\ns\api\items.php) - Handles inventory items with tax rates
-- **Accounts API**: [api/accounts.php](file://c:\xampp\htdocs\New%20folder\ns\api\accounts.php) - Handles chart of accounts
+- **Parties API**: [api/parties.php](file://c:\xampp\htdocs\ns\api\parties.php) - Handles customers and suppliers with NTN/STRN
+- **Items API**: [api/items.php](file://c:\xampp\htdocs\ns\api\items.php) - Handles inventory items with tax rates
+- **Accounts API**: [api/accounts.php](file://c:\xampp\htdocs\ns\api\accounts.php) - Handles chart of accounts
 
-The main application's JavaScript ([app.js](file://c:\xampp\htdocs\New%20folder\ns\app.js)) has been updated to:
+The main application's JavaScript ([app.js](file://c:\xampp\htdocs\ns\app.js)) has been updated to:
 - Fetch data from these APIs
 - Display real-time data in the main interface
 - Provide links to detailed forms for data entry

@@ -154,7 +154,7 @@ All CRUD operations include:
 
 To test the CRUD functionality:
 
-1. Open the CRUD test page at `http://localhost:8080/New%20folder/ns/crud_test.html`
+1. Open the CRUD test page at `http://localhost:8080/ns/crud_test.html`
 2. Test each module (Accounts, Items, Parties) using the forms
 3. Verify that created records appear in the tables
 4. Test editing existing records
@@ -166,7 +166,7 @@ To test the CRUD functionality:
 
 To test all voucher types:
 
-1. Open the voucher test page at `http://localhost:8080/New%20folder/ns/voucher_test.html`
+1. Open the voucher test page at `http://localhost:8080/ns/voucher_test.html`
 2. Test each voucher type (Sales, Purchase, Payment, Receipt, Journal)
 3. Verify that transactions are created successfully
 4. Check that error messages appear for invalid operations

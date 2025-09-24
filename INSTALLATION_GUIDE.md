@@ -26,7 +26,7 @@ There are two ways to set up the database:
 #### Option A: Using the Installation Script (Recommended)
 
 1. Open your web browser
-2. Navigate to: `http://localhost:8080/New%20folder/ns/install.php` (adjust port as needed)
+2. Navigate to: `http://localhost:8080/ns/install.php` (adjust port as needed)
 3. Click the "Install Database" button
 4. Wait for the installation to complete
 5. The system will automatically load demo data for the chemical market
@@ -51,14 +51,14 @@ There are two ways to set up the database:
 ### 3. Verify Installation
 
 1. Open your web browser
-2. Navigate to: `http://localhost:8080/New%20folder/ns/index.html` (adjust port as needed)
+2. Navigate to: `http://localhost:8080/ns/index.html` (adjust port as needed)
 3. You should see the application dashboard
 
 ### 4. Test API Endpoints
 
 To verify that the API endpoints are working correctly:
 
-1. Navigate to: `http://localhost:8080/New%20folder/ns/api/accounts.php`
+1. Navigate to: `http://localhost:8080/ns/api/accounts.php`
 2. You should see a JSON response with account data
 
 ## Troubleshooting

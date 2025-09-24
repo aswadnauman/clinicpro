@@ -13,7 +13,7 @@ This document outlines all the fixes and improvements made to implement proper C
 
 ### 1. Enhanced Frontend JavaScript (app.js)
 
-Updated the [app.js](file://c:\xampp\htdocs\New folder\ns\app.js) file with proper CRUD operations:
+Updated the [app.js](file://c:\xampp\htdocs\ns\app.js) file with proper CRUD operations:
 
 - **Create Operations**: Added actual API calls to create new records
 - **Read Operations**: Implemented proper data fetching and display
@@ -33,7 +33,7 @@ Updated the [app.js](file://c:\xampp\htdocs\New folder\ns\app.js) file with prop
 
 ### 3. Created Comprehensive CRUD Test Page
 
-Developed [crud_test.html](file://c:\xampp\htdocs\New folder\ns\crud_test.html) to test all CRUD operations:
+Developed [crud_test.html](file://c:\xampp\htdocs\ns\crud_test.html) to test all CRUD operations:
 
 - **Accounts Module**: Full CRUD operations for chart of accounts
 - **Items Module**: Full CRUD operations for inventory items
@@ -103,7 +103,7 @@ Developed [crud_test.html](file://c:\xampp\htdocs\New folder\ns\crud_test.html) 
 
 ## Testing
 
-The CRUD functionality has been tested with the comprehensive test page ([crud_test.html](file://c:\xampp\htdocs\New folder\ns\crud_test.html)) which verifies:
+The CRUD functionality has been tested with the comprehensive test page ([crud_test.html](file://c:\xampp\htdocs\ns\crud_test.html)) which verifies:
 
 1. All Create operations work correctly
 2. All Read operations display accurate data
@@ -115,7 +115,7 @@ The CRUD functionality has been tested with the comprehensive test page ([crud_t
 
 ## How to Test CRUD Operations
 
-1. Open [crud_test.html](file://c:\xampp\htdocs\New folder\ns\crud_test.html) in your browser
+1. Open [crud_test.html](file://c:\xampp\htdocs\ns\crud_test.html) in your browser
 2. Test each module (Accounts, Items, Parties) using the forms
 3. Verify that created records appear in the tables
 4. Test editing existing records
